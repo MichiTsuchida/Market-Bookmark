@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="button_add_bookmark">お気に入りに追加</string>
+    <string name="menu_remove_item">リストアイテムを削除</string>
+    <string name="progress_body">アプリケーション名を取得しています。</string>
+    <string name="progress_title">通信中</string>
+    <string name="toast_added_item">をお気に入りに登録しました。</string>
+    <string name="toast_no_item_in_list">お気に入りに何も登録されていません。\nマーケットでアプリを表示し、共有機能からお気に入りに登録してください。\nアプリを終了します。</string>
+    <string name="toast_no_item_is_checked">リストアイテムにチェックを付けてから実行してください。</string>
+</resources>

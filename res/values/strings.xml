@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Market Bookmark</string>
+    <string name="button_add_bookmark">Add to bookmark</string>
+    <string name="button_market">Market</string>
+    <string name="menu_remove_item">Remove item from list</string>
+    <string name="checkbox_null_text"></string>
+    <string name="progress_body">Getting the application name...</string>
+    <string name="progress_title">Connecting</string>
+    <string name="toast_added_item">was added to the bookmark!</string>
+    <string name="toast_no_item_in_list">No items in the bookmark! Search the application via Market, and select "Market Bookmark" by doing "share". Market Bookmark will exit.</string>
+    <string name="toast_no_item_is_checked">Please mark the checkbox before you remove items.</string>
+    <string name="text_app_name">App name:</string>
+    <string name="text_pkg_name">Package name:</string>
+    <string name="text_market_url">Market URL:</string>
+</resources>

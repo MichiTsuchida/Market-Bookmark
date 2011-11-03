@@ -1,0 +1,27 @@
+public class ThreadPra extends Activity implements Runnable {
+	TextView textview1;
+	Thread trd;
+	Handler handler;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		setContentView(R.layout.main);
+		textview1 = (TextView)findViewById(R.id.textView1);
+
+		handler = new Handler();
+		textview1.setText("onCreate");
+		Thread trd2 = new Thread(this);
+		trd2.start();
+	}
+
+	public void run() {
+		handler.post(new Runnable() {
+			@Override
+			public void run() {
+				// TODO: hogehoge
+				textview1.setText("hogehoge");
+			}
+		});
+	}
+}
