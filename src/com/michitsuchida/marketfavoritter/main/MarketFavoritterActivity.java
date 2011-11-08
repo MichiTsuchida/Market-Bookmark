@@ -17,6 +17,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -58,45 +59,41 @@ public class MarketFavoritterActivity extends Activity {
          */
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
-            // AppElementのインスタンスを取得
-            final AppElement app = list.get(position);
             // Viewが使いまわされていない場合、nullが格納されている
             if (convertView == null) {
                 // 1行分layoutからViewの塊を生成
                 convertView = inflater.inflate(R.layout.inflater, null);
                 Log.d(LOG_TAG, "New convertView create.");
-
-                // Viewをクリックしたらマーケットに飛ぶ
-                convertView.setOnClickListener(new OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Uri uri = Uri.parse("market://details?id=" + app.getPkgName());
-                        startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                        Log.i(LOG_TAG, "Throw intent for AndroidMarket. Uri: " + uri.toString());
-                    }
-                });
             }
 
             // listからAppのデータ、viewから画面にくっついているViewを取り出して値を格納する
+            final AppElement app = list.get(position);
             TextView appNameText = (TextView) convertView.findViewById(R.id.inflaterAppName);
             appNameText.setText(app.getAppName());
             TextView appPkgText = (TextView) convertView.findViewById(R.id.inflaterAppPkgName);
             appPkgText.setText(app.getPkgName());
 
             // Buttonを実装
-            // Button button = (Button)
-            // convertView.findViewById(R.id.inflaterButton);
-            // button.setText(R.string.button_market);
-            // button.setOnClickListener(new OnClickListener() {
+            Button button = (Button) convertView.findViewById(R.id.inflaterButton);
+            button.setText(R.string.button_market);
+            button.setOnClickListener(new OnClickListener() {
+                public void onClick(View v) {
+                    // MarketアプリへのIntentを作成して投げる
+                    // AndroidMarketのアプリ詳細画面を開く
+                    // market://details?id=<pkg name>
+                    // AndroidMarketをアプリ開発者名で検索
+                    // market://search?q=pub:<publisher name>
+                    // AndroidMarketをフリーワード検索
+                    // market://search?q=<words>
+                    Uri uri = Uri.parse("market://details?id=" + app.getPkgName());
+                    startActivity(new Intent(Intent.ACTION_VIEW, uri));
+                    Log.i(LOG_TAG, "Throw intent for AndroidMarket. Uri: " + uri.toString());
+                }
+            });
+            // ButtonのかわりにViewをクリックしたらマーケットに飛ぶ
+            // convertView.setOnClickListener(new OnClickListener() {
+            // @Override
             // public void onClick(View v) {
-
-            // MarketアプリへのIntentを作成して投げる
-            /*
-             * AndroidMarketのアプリ詳細画面を開く market://details?id=<pkg name>
-             * AndroidMarketをアプリ開発者名で検索 market://search?q=pub:<publisher name>
-             * AndroidMarketをフリーワード検索 market://search?q=<words>
-             */
-
             // Uri uri = Uri.parse("market://details?id=" + app.getPkgName());
             // startActivity(new Intent(Intent.ACTION_VIEW, uri));
             // Log.i(LOG_TAG, "Throw intent for AndroidMarket. Uri: " +
@@ -131,7 +128,15 @@ public class MarketFavoritterActivity extends Activity {
         }
     }
 
-    // ==================== MarketFavoritterActivityクラス本体 ====================
+    /*
+     * ==========================================================================
+     * ==
+     */
+    /* MarketFavoritterActivityクラス本体 */
+    /*
+     * ==========================================================================
+     * ==
+     */
     // LOG TAG
     static final String LOG_TAG = "MarketBookmark";
 

@@ -17,20 +17,21 @@ public final class R {
     public static final class id {
         public static final int inflaterAppName=0x7f050003;
         public static final int inflaterAppPkgName=0x7f050004;
+        public static final int inflaterButton=0x7f050005;
         public static final int inflaterCheckBox=0x7f050001;
         public static final int inflaterLayout=0x7f050000;
         public static final int inflaterTextLayout=0x7f050002;
-        public static final int mainAppListView=0x7f050006;
-        public static final int mainLayout=0x7f050005;
-        public static final int marketLinkAddButton=0x7f05000f;
-        public static final int marketLinkEditTextAppName=0x7f05000a;
-        public static final int marketLinkEditTextUrl=0x7f05000e;
-        public static final int marketLinkSummaryLayout=0x7f050008;
-        public static final int marketLinkSummaryScrollView=0x7f050007;
-        public static final int marketLinkTextAppName=0x7f050009;
-        public static final int marketLinkTextPkg=0x7f05000b;
-        public static final int marketLinkTextPkgName=0x7f05000c;
-        public static final int marketLinkTextUrl=0x7f05000d;
+        public static final int mainAppListView=0x7f050007;
+        public static final int mainLayout=0x7f050006;
+        public static final int marketLinkAddButton=0x7f050010;
+        public static final int marketLinkEditTextAppName=0x7f05000b;
+        public static final int marketLinkEditTextUrl=0x7f05000f;
+        public static final int marketLinkSummaryLayout=0x7f050009;
+        public static final int marketLinkSummaryScrollView=0x7f050008;
+        public static final int marketLinkTextAppName=0x7f05000a;
+        public static final int marketLinkTextPkg=0x7f05000c;
+        public static final int marketLinkTextPkgName=0x7f05000d;
+        public static final int marketLinkTextUrl=0x7f05000e;
     }
     public static final class layout {
         public static final int inflater=0x7f030000;
