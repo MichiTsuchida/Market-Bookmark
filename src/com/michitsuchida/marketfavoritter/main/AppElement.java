@@ -1,65 +1,82 @@
+
 package com.michitsuchida.marketfavoritter.main;
 
+/**
+ * アプリ情報を保持するデータクラス。
+ * 
+ * @author MichiTsuchida
+ */
 public class AppElement {
-    String appName;
-    String pkgName;
-    String marketUrl;
+    /** Application name */
+    String mAppName;
+
+    /** Application Package name */
+    String mPkgName;
+
+    /** Application URL of Market */
+    String mMarketUrl;
+
+    /** Memo for this Application such as TAGs */
+    String mTagMemo;
+
+    /** DataBase ID */
     int _id;
-    boolean isChecked;
+
+    /** Is this element checkbox tapped? */
+    boolean mIsChecked;
 
     /**
-     * @param appName
-     * @param pkgName
-     * @param marketUrl
+     * @param mAppName
+     * @param mPkgName
+     * @param mMarketUrl
      */
     public AppElement(String appName, String pkgName, String marketUrl) {
         super();
-        this.appName = appName;
-        this.pkgName = pkgName;
-        this.marketUrl = marketUrl;
+        this.mAppName = appName;
+        this.mPkgName = pkgName;
+        this.mMarketUrl = marketUrl;
     }
 
     /**
-     * @param appName
-     * @param pkgName
-     * @param marketUrl
+     * @param mAppName
+     * @param mPkgName
+     * @param mMarketUrl
      * @param _id
      */
     public AppElement(String appName, String pkgName, String marketUrl, int _id) {
         super();
-        this.appName = appName;
-        this.pkgName = pkgName;
-        this.marketUrl = marketUrl;
+        this.mAppName = appName;
+        this.mPkgName = pkgName;
+        this.mMarketUrl = marketUrl;
         this._id = _id;
     }
 
     /**
-     * @param appName
-     * @param pkgName
-     * @param marketUrl
+     * @param mAppName
+     * @param mPkgName
+     * @param mMarketUrl
      * @param _id
-     * @param isChecked
+     * @param mIsChecked
      */
-    public AppElement(String appName, String pkgName, String marketUrl,
-            int _id, boolean isChecked) {
+    public AppElement(String appName, String pkgName, String marketUrl, int _id, boolean isChecked) {
         super();
-        this.appName = appName;
-        this.pkgName = pkgName;
-        this.marketUrl = marketUrl;
+        this.mAppName = appName;
+        this.mPkgName = pkgName;
+        this.mMarketUrl = marketUrl;
         this._id = _id;
-        this.isChecked = isChecked;
+        this.mIsChecked = isChecked;
     }
 
     public String getAppName() {
-        return appName;
+        return mAppName;
     }
 
     public String getPkgName() {
-        return pkgName;
+        return mPkgName;
     }
 
     public String getMarketUrl() {
-        return marketUrl;
+        return mMarketUrl;
     }
 
     public int get_id() {
@@ -67,10 +84,10 @@ public class AppElement {
     }
 
     public boolean getIsChecked() {
-        return isChecked;
+        return mIsChecked;
     }
 
     public void setIsChecked(boolean isChecked) {
-        this.isChecked = isChecked;
+        this.mIsChecked = isChecked;
     }
 }

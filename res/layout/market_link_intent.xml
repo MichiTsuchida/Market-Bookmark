@@ -14,49 +14,61 @@
             android:orientation="vertical">
             <TextView
                 android:id="@+id/marketLinkTextAppName"
+                android:text="@string/text_app_name"
                 android:textSize="12pt"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
                 android:layout_marginTop="10sp"
-                android:layout_marginBottom="10sp" android:text="@string/text_app_name">
+                android:layout_marginBottom="10sp">
             </TextView>
             <EditText
                 android:id="@+id/marketLinkEditTextAppName"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
-                android:layout_marginLeft="10sp"
-                android:layout_marginRight="10sp">
+                android:layout_marginRight="10sp"
+                android:layout_marginLeft="10sp">
             </EditText>
             <TextView
                 android:id="@+id/marketLinkTextPkg"
+                android:text="@string/text_pkg_name"
                 android:textSize="10pt"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:layout_marginTop="10sp" android:text="@string/text_pkg_name">
+                android:layout_marginTop="10sp">
             </TextView>
-            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="TextView" android:textSize="10pt" android:layout_marginTop="10sp" android:layout_marginLeft="10sp" android:layout_marginRight="10sp" android:id="@+id/marketLinkTextPkgName"></TextView>
+            <TextView
+                android:id="@+id/marketLinkTextPkgName"
+                android:text="TextView"
+                android:textSize="10pt"
+                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="10sp"
+                android:layout_marginRight="10sp"
+                android:layout_marginLeft="10sp">
+            </TextView>
             <TextView
                 android:id="@+id/marketLinkTextUrl"
+                android:text="@string/text_market_url"
                 android:textSize="9pt"
                 android:layout_height="wrap_content"
                 android:layout_width="wrap_content"
-                android:layout_marginTop="10sp" android:text="@string/text_market_url">
+                android:layout_marginTop="10sp">
             </TextView>
             <EditText
                 android:id="@+id/marketLinkEditTextUrl"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_marginTop="10sp"
-                android:layout_marginLeft="10sp"
-                android:layout_marginRight="10sp">
+                android:layout_marginRight="10sp"
+                android:layout_marginLeft="10sp">"
             </EditText>
             <Button
                 android:id="@+id/marketLinkAddButton"
                 android:text="@string/button_add_bookmark"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
-                android:layout_marginLeft="10sp"
-                android:layout_marginRight="10sp">
+                android:layout_marginRight="10sp"
+                android:layout_marginLeft="10sp">
             </Button>
         </LinearLayout>
     </ScrollView>

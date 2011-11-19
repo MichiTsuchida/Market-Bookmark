@@ -2,8 +2,17 @@
 <resources>
     <string name="button_add_bookmark">お気に入りに追加</string>
     <string name="menu_remove_item">リストアイテムを削除</string>
+    <string name="menu_sort_item">並び替え</string>
     <string name="progress_body">アプリケーション名を取得しています。</string>
     <string name="progress_title">通信中</string>
+    <string-array name="sort_order">
+        <item>デフォルト</item>
+        <item>アプリケーション名</item>
+        <item>アプリケーション名逆順</item>
+        <item>パッケージ名</item>
+        <item>パッケージ名逆順</item>
+    </string-array>
+    <string name="sort_title">並び替える順序を指定</string>
     <string name="toast_added_item">をお気に入りに登録しました。</string>
     <string name="toast_no_item_in_list">お気に入りに何も登録されていません。\nマーケットでアプリを表示し、共有機能からお気に入りに登録してください。\nアプリを終了します。</string>
     <string name="toast_no_item_is_checked">リストアイテムにチェックを付けてから実行してください。</string>

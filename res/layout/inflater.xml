@@ -18,17 +18,19 @@ ListView用レイアウト定義XMLファイル。
     android:orientation="horizontal">
     <CheckBox
         android:id="@+id/inflaterCheckBox"
+        android:text="@string/checkbox_null_text"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
-        android:layout_marginLeft="10sp" android:text="@string/checkbox_null_text">
+        android:layout_marginLeft="10sp">
     </CheckBox>
     <LinearLayout
         android:id="@+id/inflaterTextLayout"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent"
         android:layout_weight="1"
-        android:orientation="vertical"
-        android:gravity="center_vertical|center_horizontal" android:layout_marginRight="5sp">
+        android:layout_marginRight="5sp"
+        android:gravity="center_vertical|center_horizontal"
+        android:orientation="vertical">
         <TextView
             android:id="@+id/inflaterAppName"
             android:text="inflaterTop"
@@ -37,8 +39,8 @@ ListView用レイアウト定義XMLファイル。
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
             android:layout_marginTop="10sp"
-            android:layout_marginLeft="5sp"
             android:layout_marginRight="10sp"
+            android:layout_marginLeft="5sp"
             android:layout_gravity="left">
         </TextView>
         <TextView
@@ -47,18 +49,18 @@ ListView用レイアウト定義XMLファイル。
             android:textSize="15sp"
             android:layout_height="wrap_content"
             android:layout_width="wrap_content"
-            android:layout_marginLeft="5sp"
             android:layout_marginRight="10sp"
             android:layout_marginBottom="10sp"
+            android:layout_marginLeft="5sp"
             android:layout_gravity="left">
         </TextView>
     </LinearLayout>
-    <!--<Button
+    <Button
         android:id="@+id/inflaterButton"
         android:text="@string/button_market"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_margin="10sp"
         android:layout_weight="0">
-    </Button>-->
+    </Button>
 </LinearLayout>

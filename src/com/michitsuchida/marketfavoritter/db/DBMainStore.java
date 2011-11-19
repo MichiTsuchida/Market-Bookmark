@@ -13,101 +13,135 @@ import android.util.Log;
 
 import com.michitsuchida.marketfavoritter.main.AppElement;
 
+/**
+ * データベースを開いたりレコードの取得、更新等を行うためのクラス。
+ * 
+ * @author MichiTsuchida
+ */
 public class DBMainStore {
 
+    /** LOG TAG */
     static final String LOG_TAG = "DBMainStore";
 
-    private DBOpenHelper m_helper;
+    /** DBOpenHelperオブジェクト */
+    private DBOpenHelper mHelper;
 
-    private SQLiteDatabase m_db;
+    /** SQLiteDatabaseオブジェクト */
+    private SQLiteDatabase mDb;
 
+    /** データベースのテーブル名 */
     static final String TBL_NAME = "app";
 
-    private static final String COLUMN_ID = "_id";
+    /** テーブルのカラム:ID */
+    public static final String COLUMN_ID = "_id";
 
-    private static final String COLUMN_APP_NAME = "name";
+    /** テーブルのカラム:アプリ名 */
+    public static final String COLUMN_APP_NAME = "name";
 
-    private static final String COLUMN_APP_PACKAGE = "pkg";
+    /** テーブルのカラム:パッケージ名 */
+    public static final String COLUMN_APP_PACKAGE = "pkg";
 
-    private static final String COLUMN_APP_URL = "url";
+    /** テーブルのカラム:URL */
+    public static final String COLUMN_APP_URL = "url";
 
-    // Counter for DB data rows.
-    private int count = 0;
+    /** テーブルのソートオーダー */
+    public static final String ASC = "ASC";
+
+    /** テーブルのソートオーダー */
+    public static final String DESC = "DESC";
+
+    /** データの件数のためのカウンタ */
+    private int mCount = 0;
 
     /**
-     * Constructor. Get the DB object.
+     * コンストラクタ。データベースのオブジェクトを取得する。
      * 
-     * @param context
-     * @param isUpdate
+     * @param context コンテキスト
+     * @param isUpdate レコードを更新するかどうか
      */
     public DBMainStore(Context context, boolean isUpdate) {
-        m_helper = DBOpenHelper.getInstance(context);
-        if (m_helper != null) {
+        mHelper = DBOpenHelper.getInstance(context);
+        if (mHelper != null) {
             if (isUpdate) {
-                m_db = m_helper.getWritableDatabase();
+                mDb = mHelper.getWritableDatabase();
             } else {
-                m_db = m_helper.getReadableDatabase();
+                mDb = mHelper.getReadableDatabase();
             }
         } else {
-            m_db = null;
+            mDb = null;
         }
     }
 
     /**
-     * Close DB.
+     * データベースを閉じる。
      */
     public void close() {
-        m_db.close();
+        mDb.close();
     }
 
     /**
-     * Add the record to DB.
+     * データベースにレコードを追加する。
+     * 
+     * @param name アプリ名
+     * @param pkg パッケージ名
+     * @param url URL
      */
     public void add(String name, String pkg, String url) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_APP_NAME, name);
         values.put(COLUMN_APP_PACKAGE, pkg);
         values.put(COLUMN_APP_URL, url);
-        m_db.insert(TBL_NAME, null, values);
+        mDb.insert(TBL_NAME, null, values);
     }
 
     /**
-     * Update the record of DB.
+     * データベースのレコードを更新する。
+     * 
+     * @param _id レコードのID
+     * @param name アプリ名
+     * @param pkg パッケージ名
+     * @param url URL
      */
     public void update(int _id, String name, String pkg, String url) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_APP_NAME, name);
         values.put(COLUMN_APP_PACKAGE, pkg);
         values.put(COLUMN_APP_URL, url);
-        m_db.update(TBL_NAME, values, COLUMN_ID + "=?", new String[] {
+        mDb.update(TBL_NAME, values, COLUMN_ID + "=?", new String[] {
             Integer.toString(_id)
         });
     }
 
     /**
-     * Delete record from DB.
+     * データベースからレコードを削除する。
+     * 
+     * @param レコードのIDを指定した配列
      */
     public void delete(String[] _ids) {
         for (int i = 0; i < _ids.length; i++) {
-            m_db.delete(TBL_NAME, "_id=?", new String[] {
+            mDb.delete(TBL_NAME, "_id=?", new String[] {
                 _ids[i]
             });
         }
     }
 
     /**
-     * Get all record(s) from DB.
+     * すべてのレコードをデータベースから取得する。
+     * 
+     * @param order 並び順を指定しない場合は、nullをセットすること。
+     *            並び順を指定する場合は、"pkg DESC"のように、"COLUMN_NAME ASC|DESC"と指定すること。
+     * @return すべてのレコードが格納されたArrayList
      */
-    public List<AppElement> fetchAllData() {
+    public List<AppElement> fetchAllData(String order) {
         List<AppElement> data = new ArrayList<AppElement>();
         Cursor c = null;
         try {
-            c = m_db.query(TBL_NAME, new String[] {
+            c = mDb.query(TBL_NAME, new String[] {
                     COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL
-            }, null, null, null, null, null);
+            }, null, null, null, null, order);
             c.moveToFirst();
-            count = c.getCount();
-            for (int i = 0; i < count; i++) {
+            mCount = c.getCount();
+            for (int i = 0; i < mCount; i++) {
                 AppElement elem = new AppElement(c.getString(1), c.getString(2), c.getString(3),
                         c.getInt(0));
                 data.add(elem);
@@ -122,7 +156,12 @@ public class DBMainStore {
         return data;
     }
 
+    /**
+     * データベースに格納されているレコードの件数を取得する。
+     * 
+     * @return レコードの件数
+     */
     public int getCount() {
-        return count;
+        return mCount;
     }
 }
