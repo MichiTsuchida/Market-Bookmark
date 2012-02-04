@@ -7,6 +7,7 @@ package com.michitsuchida.marketfavoritter.main;
  * @author MichiTsuchida
  */
 public class AppElement {
+
     /** Application name */
     String mAppName;
 
@@ -16,53 +17,52 @@ public class AppElement {
     /** Application URL of Market */
     String mMarketUrl;
 
-    /** Memo for this Application such as TAGs */
-    String mTagMemo;
+    /** Label for Application */
+    String mLabel;
 
     /** DataBase ID */
     int _id;
 
-    /** Is this element checkbox tapped? */
+    /** Is checkbox of this element tapped? */
     boolean mIsChecked;
 
     /**
-     * @param mAppName
-     * @param mPkgName
-     * @param mMarketUrl
+     * デフォルトコンストラクタ。
      */
-    public AppElement(String appName, String pkgName, String marketUrl) {
-        super();
-        this.mAppName = appName;
-        this.mPkgName = pkgName;
-        this.mMarketUrl = marketUrl;
+    public AppElement() {
     }
 
     /**
      * @param mAppName
      * @param mPkgName
      * @param mMarketUrl
+     * @param mLabel
      * @param _id
      */
-    public AppElement(String appName, String pkgName, String marketUrl, int _id) {
+    public AppElement(String appName, String pkgName, String marketUrl, String label, int _id) {
         super();
         this.mAppName = appName;
         this.mPkgName = pkgName;
         this.mMarketUrl = marketUrl;
+        this.mLabel = label;
         this._id = _id;
     }
 
     /**
-     * @param mAppName
-     * @param mPkgName
-     * @param mMarketUrl
+     * @param appName
+     * @param pkgName
+     * @param marketUrl
+     * @param label
      * @param _id
-     * @param mIsChecked
+     * @param isChecked
      */
-    public AppElement(String appName, String pkgName, String marketUrl, int _id, boolean isChecked) {
+    public AppElement(String appName, String pkgName, String marketUrl, String label, int _id,
+            boolean isChecked) {
         super();
         this.mAppName = appName;
         this.mPkgName = pkgName;
         this.mMarketUrl = marketUrl;
+        this.mLabel = label;
         this._id = _id;
         this.mIsChecked = isChecked;
     }
@@ -89,5 +89,13 @@ public class AppElement {
 
     public void setIsChecked(boolean isChecked) {
         this.mIsChecked = isChecked;
+    }
+
+    public String getLabel() {
+        return mLabel;
+    }
+
+    public void setLabel(String label) {
+        this.mLabel = label;
     }
 }

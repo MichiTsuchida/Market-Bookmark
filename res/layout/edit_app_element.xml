@@ -4,16 +4,16 @@
     android:layout_width="fill_parent"
     android:orientation="vertical">
     <ScrollView
-        android:id="@+id/marketLinkSummaryScrollView"
+        android:id="@+id/editElementSummaryScrollView"
         android:layout_height="wrap_content"
         android:layout_width="fill_parent">
         <LinearLayout
-            android:id="@+id/marketLinkSummaryLayout"
+            android:id="@+id/editElementSummaryLayout"
             android:layout_height="wrap_content"
             android:layout_width="fill_parent"
             android:orientation="vertical">
             <TextView
-                android:id="@+id/marketLinkTextAppName"
+                android:id="@+id/editElementTextAppName"
                 android:text="@string/text_app_name"
                 android:textSize="10pt"
                 android:layout_height="wrap_content"
@@ -22,7 +22,7 @@
                 android:layout_marginBottom="10sp">
             </TextView>
             <EditText
-                android:id="@+id/marketLinkEditTextAppName"
+                android:id="@+id/editElementEditTextAppName"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_marginRight="10sp"
@@ -30,7 +30,7 @@
                 android:inputType="text">
             </EditText>
             <TextView
-                android:id="@+id/marketLinkTextUrl"
+                android:id="@+id/editElementTextUrl"
                 android:text="@string/text_market_url"
                 android:textSize="10pt"
                 android:layout_height="wrap_content"
@@ -43,7 +43,7 @@
                 android:layout_height="wrap_content"
                 android:baselineAligned="false" >
                 <TextView
-                    android:id="@+id/marketLinkTextUrlBody"
+                    android:id="@+id/editElementTextUrlBody"
                     android:text="TextView"
                     android:textSize="8pt"
                     android:layout_height="wrap_content"
@@ -53,7 +53,7 @@
                     android:layout_weight="1">
                 </TextView>
                 <Button
-                    android:id="@+id/marketLinkUrlCopyButton"
+                    android:id="@+id/editElementUrlCopyButton"
                     android:text="@string/button_copy_url"
                     android:layout_height="wrap_content"
                     android:layout_width="wrap_content"
@@ -62,7 +62,7 @@
                 </Button>
             </LinearLayout>
             <TextView
-                android:id="@+id/marketLinkTextLabel"
+                android:id="@+id/editElementTextLabel"
                 android:text="@string/text_label"
                 android:textSize="10pt"
                 android:layout_height="wrap_content"
@@ -71,7 +71,7 @@
                 android:layout_marginBottom="10sp">
             </TextView>
             <EditText
-                android:id="@+id/marketLinkEditTextLabel"
+                android:id="@+id/editElementEditTextLabel"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_marginRight="10sp"
@@ -80,7 +80,7 @@
                 <requestFocus></requestFocus>
             </EditText>
             <TextView
-                android:id="@+id/marketLinkTextPkg"
+                android:id="@+id/editElementTextPkg"
                 android:text="@string/text_pkg_name"
                 android:textSize="10pt"
                 android:layout_height="wrap_content"
@@ -88,7 +88,7 @@
                 android:layout_marginTop="10sp">
             </TextView>
             <TextView
-                android:id="@+id/marketLinkTextPkgName"
+                android:id="@+id/editElementTextPkgName"
                 android:text="TextView"
                 android:textSize="8pt"
                 android:layout_height="wrap_content"
@@ -99,8 +99,8 @@
                 android:layout_marginBottom="10sp">
             </TextView>
             <Button
-                android:id="@+id/marketLinkAddButton"
-                android:text="@string/button_add_bookmark"
+                android:id="@+id/editElementButton"
+                android:text="@string/button_edit_bookmark"
                 android:layout_height="wrap_content"
                 android:layout_width="fill_parent"
                 android:layout_marginRight="10sp"

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="button_add_bookmark">お気に入りに追加</string>
-    <string name="menu_remove_item">リストアイテムを削除</string>
+    <string name="button_cancel">キャンセル</string>
+    <string name="button_edit_bookmark">お気に入りを編集</string>
+    <string name="dialog_add_item_title">お気に入りに追加</string>
+    <string name="dialog_add_item_text">すでにデータベースに登録されています。</string>
+    <string name="dialog_remove_title">アイテムを削除</string>
+    <string name="dialog_remove_text">チェックを入れたアイテムを削除します。</string>
+    <string name="dialog_share_title">共有する: </string>
+    <string name="dialog_share_from_market_title">これは処理できません</string>
+    <string name="dialog_share_from_market_text">Androidマーケットからアプリケーションを共有してください。</string>
+    <string name="filter_clear_label">フィルタをクリア</string>
+    <string name="filter_title">ラベルを選択</string>
+    <string name="menu_edit_item">アイテムを編集</string>
+    <string name="menu_filter_item">ラベルで絞込み</string>
+    <string name="menu_remove_item">アイテムを削除</string>
+    <string name="menu_share_item">共有</string>
     <string name="menu_sort_item">並び替え</string>
     <string name="progress_body">アプリケーション名を取得しています。</string>
     <string name="progress_title">通信中</string>
@@ -13,7 +27,13 @@
         <item>パッケージ名逆順</item>
     </string-array>
     <string name="sort_title">並び替える順序を指定</string>
-    <string name="toast_added_item">をお気に入りに登録しました。</string>
+    <string name="toast_added_item"> をお気に入りに登録しました。</string>
+    <string name="toast_copied_to_clipboard"> をコピーしました。</string>
+    <string name="toast_edited_item"> を編集しました。</string>
     <string name="toast_no_item_in_list">お気に入りに何も登録されていません。\nマーケットでアプリを表示し、共有機能からお気に入りに登録してください。\nアプリを終了します。</string>
-    <string name="toast_no_item_is_checked">リストアイテムにチェックを付けてから実行してください。</string>
+    <string name="toast_many_item_is_checked">複数のアイテムは選択できません。</string>
+    <string name="toast_no_item_is_checked">アイテムにチェックを付けてから実行してください。</string>
+    <string name="text_app_name">アプリケーション名:</string>
+    <string name="text_label">ラベル:</string>
+    <string name="text_pkg_name">Package名:</string>
 </resources>

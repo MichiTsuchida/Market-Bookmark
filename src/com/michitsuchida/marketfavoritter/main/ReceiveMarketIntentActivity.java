@@ -11,12 +11,15 @@ import java.util.regex.PatternSyntaxException;
 import javax.net.ssl.HttpsURLConnection;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.text.ClipboardManager;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -28,7 +31,7 @@ import android.widget.Toast;
 import com.michitsuchida.marketfavoritter.db.DBMainStore;
 
 /**
- * マーケットアプリからのIntentを受けた場合に呼ばれるActivity
+ * マーケットアプリからのIntentを受けた場合に呼ばれるActivity。
  * 
  * @author MichiTsuchida
  */
@@ -43,6 +46,9 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** <title>タグの内容をぶっこ抜く正規表現パターン */
     public static final String PATTERN_FOR_TITLE_TAG = ".*<title>(.+)\\s-\\s.+</title>.*";
 
+    /** マーケットアプリのパッケージ名 */
+    public static final String MARKET_URL_PREFIX = "https://market.android.com/details";
+
     /** <title>タグの内容を格納する */
     private String mTitle = "";
 
@@ -55,14 +61,20 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** マーケットのURL */
     private String mUrl = "";
 
+    /** ラベル */
+    private String mLabel;
+
     /** アプリ名のEditText */
     private EditText mEtAppName;
+
+    /** ラベルのEditText */
+    private EditText mEtLabel;
 
     /** 処理中にくるくるさせるダイアログ */
     private ProgressDialog mProg;
 
     /**
-     * onCreate
+     * onCreate.
      * 
      * @param savedInstanceState
      */
@@ -72,58 +84,120 @@ public class ReceiveMarketIntentActivity extends Activity {
         setContentView(R.layout.market_link_intent);
         final Context context = this;
 
+        // String packageName = getCallingActivity().getPackageName();
+        // String className = getCallingActivity().getClassName();
+        // Log.d(LOG_TAG, "Caller package: " + packageName);
+        // Log.i(LOG_TAG, "Caller class: " + className);
+
         Intent marketIntent = getIntent();
         String action = marketIntent.getAction();
+
+        // Actionの判定
         if (Intent.ACTION_SEND.equals(action)) {
             // Intentの情報を取得する
             Bundle extras = marketIntent.getExtras();
             if (extras != null) {
-                // アプリのURL取得し、それをパッケージ名に変換する
+                // アプリのURLを取得する
                 mUrl = extras.getCharSequence(Intent.EXTRA_TEXT).toString();
-                mPkg = mUrl.substring(mUrl.indexOf("id=") + 3);
+                Log.d(LOG_TAG, mUrl);
 
-                // 1.プログレスバーをくるくる
-                mProg = new ProgressDialog(this);
-                mProg.setTitle(R.string.progress_title);
-                mProg.setMessage(getString(R.string.progress_body));
-                mProg.show();
+                // 呼び出し元がマーケットかどうか判定
+                if (mUrl.indexOf(MARKET_URL_PREFIX) != -1) {
+                    // URLをパッケージ名に変換
+                    mPkg = mUrl.substring(mUrl.indexOf("id=") + 3);
 
-                // Viewに情報をセットする
-                mEtAppName = (EditText) findViewById(R.id.marketLinkEditTextAppName);
-                mEtAppName.setText(mAppName);
+                    // DBの重複チェック
+                    final DBMainStore mainStore = new DBMainStore(this, true);
+                    AppElement elem = mainStore.fetchAppDataByColumnAndValue(
+                            DBMainStore.COLUMN_APP_PACKAGE, mPkg);
+                    if (elem != null) {
+                        Log.d(LOG_TAG, "Already exist on database. App name: " + mAppName);
+                        // なぜかToast表示されないので、重複してるよダイアログ
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                        dialog.setTitle(R.string.dialog_add_item_title);
+                        dialog.setMessage(R.string.dialog_add_item_text);
 
-                TextView tvPkgName = (TextView) findViewById(R.id.marketLinkTextPkgName);
-                tvPkgName.setText(mPkg);
+                        // OKボタン
+                        dialog.setPositiveButton(R.string.button_ok,
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int i) {
+                                        // Activityを終了する
+                                        finish();
+                                    }
+                                }).show();
+                    } else {
+                        // 1.プログレスバーをくるくる
+                        mProg = new ProgressDialog(this);
+                        mProg.setTitle(R.string.progress_title);
+                        mProg.setMessage(getString(R.string.progress_body));
+                        mProg.show();
 
-                EditText etUrl = (EditText) findViewById(R.id.marketLinkEditTextUrl);
-                etUrl.setText(mUrl);
+                        // Viewに情報をセットする
+                        mEtAppName = (EditText) findViewById(R.id.marketLinkEditTextAppName);
+                        mEtAppName.setText(mAppName);
+                        TextView tvPkgName = (TextView) findViewById(R.id.marketLinkTextPkgName);
+                        tvPkgName.setText(mPkg);
+                        TextView tvUrl = (TextView) findViewById(R.id.marketLinkTextUrlBody);
+                        tvUrl.setText(mUrl);
+                        mEtLabel = (EditText) findViewById(R.id.marketLinkEditTextLabel);
 
-                Button addButton = (Button) findViewById(R.id.marketLinkAddButton);
+                        Button addButton = (Button) findViewById(R.id.marketLinkAddButton);
+                        addButton.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                mAppName = mEtAppName.getText().toString();
+                                mLabel = mEtLabel.getText().toString();
 
-                addButton.setOnClickListener(new OnClickListener() {
-                    public void onClick(View v) {
-                        DBMainStore mainStore = new DBMainStore(context, true);
-                        mainStore.add(mEtAppName.getText().toString(), mPkg, mUrl);
-                        // Activityを終了する。
-                        finish();
-                        Toast.makeText(
-                                context,
-                                mEtAppName.getText().toString() + " "
-                                        + getString(R.string.toast_added_item), Toast.LENGTH_LONG)
-                                .show();
-                        Log.i(LOG_TAG, "Add to Market Bookmark. App name: "
-                                + mEtAppName.getText().toString());
-                    }
-                });
+                                // DBに追加する
+                                mainStore.add(mAppName, mPkg, mUrl, mLabel);
 
-                // 2.別スレッドを生成して、アプリ名を取得する
-                (new Thread(runnable)).start();
-            }
-        }
-    }
+                                // Activityを終了する
+                                finish();
+                                Toast.makeText(context,
+                                        mAppName + getString(R.string.toast_added_item),
+                                        Toast.LENGTH_LONG).show();
+                                Log.d(LOG_TAG, "Add to Market Bookmark. App name: " + mAppName);
+                            }
+                        });
+
+                        Button copyButton = (Button) findViewById(R.id.marketLinkUrlCopyButton);
+                        copyButton.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                ClipboardManager clpbrd = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                                clpbrd.setText(mUrl);
+                                Toast.makeText(context,
+                                        mUrl + getString(R.string.toast_copied_to_clipboard),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                        // 2.別スレッドを生成して、アプリ名を取得する
+                        (new Thread(runnable)).start();
+                    } /* if (elem != null) */
+                } else {
+                    // マーケットから呼びだしてねダイアログ
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+                    dialog.setTitle(R.string.dialog_share_from_market_title);
+                    dialog.setMessage(R.string.dialog_share_from_market_text);
+
+                    // OKボタン
+                    dialog.setPositiveButton(R.string.button_ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int i) {
+                                    // Activityを終了する
+                                    finish();
+                                }
+                            }).show();
+                } /* if (mUrl.indexOf(MARKET_URL_PREFIX) != -1) */
+            } /* if (extras != null) */
+        } /* if (Intent.ACTION_SEND.equals(action)) */
+    } /* onCreate() */
 
     /**
-     * アプリ名を取得する、メインとは別のスレッド
+     * メインとは別のアプリ名を取得するためのスレッド。
      */
     private Runnable runnable = new Runnable() {
         @Override
@@ -152,7 +226,7 @@ public class ReceiveMarketIntentActivity extends Activity {
     };
 
     /**
-     * 別スレッドで取得したアプリ名を変更するHandler
+     * 別スレッドで取得したアプリ名を変更するHandler。
      */
     private final Handler handler = new Handler() {
         @Override
@@ -191,7 +265,7 @@ public class ReceiveMarketIntentActivity extends Activity {
 
                 // HTMLソースを読み出す
                 String src = new String();
-                byte[] line = new byte[4 * 1024];
+                byte[] line = new byte[1024];
                 int size;
                 while (true) {
                     size = in.read(line);
@@ -202,6 +276,8 @@ public class ReceiveMarketIntentActivity extends Activity {
 
                     // HTMLのソースから<title>タグだけをぶっこ抜く正規表現
                     Pattern pattern = Pattern.compile(PATTERN_FOR_TITLE_TAG);
+                    // String#toLowerCase()で一括小文字にして比較
+                    // Matcher matcher = pattern.matcher(src.toLowerCase());
                     Matcher matcher = pattern.matcher(src);
                     if (matcher.find()) {
                         mTitle = matcher.group(1);
@@ -228,10 +304,11 @@ public class ReceiveMarketIntentActivity extends Activity {
                     if (in != null) {
                         in.close();
                     }
-                } catch (IOException e) {
+                } catch (Exception e) {
+                    // FroyoだけHttpsURLConnectionにバグがあってNullPtrExが出ちゃう。。
                     e.printStackTrace();
-                }
-            }
-        }
-    }
+                } /* try in finally */
+            } /* try */
+        } /* for */
+    } /* doRequest() */
 }

@@ -1,6 +1,8 @@
 
 package com.michitsuchida.marketfavoritter.db;
 
+import static com.michitsuchida.marketfavoritter.util.StringUtils.splitWithCommaAndSpace;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,7 +23,7 @@ import com.michitsuchida.marketfavoritter.main.AppElement;
 public class DBMainStore {
 
     /** LOG TAG */
-    static final String LOG_TAG = "DBMainStore";
+    static final String LOG_TAG = "MarketBookmark";
 
     /** DBOpenHelperオブジェクト */
     private DBOpenHelper mHelper;
@@ -29,20 +31,23 @@ public class DBMainStore {
     /** SQLiteDatabaseオブジェクト */
     private SQLiteDatabase mDb;
 
-    /** データベースのテーブル名 */
+    /** データベースのテーブル名:アプリDB */
     static final String TBL_NAME = "app";
 
-    /** テーブルのカラム:ID */
+    /** DBのカラム:ID */
     public static final String COLUMN_ID = "_id";
 
-    /** テーブルのカラム:アプリ名 */
+    /** アプリDBのカラム:アプリ名 */
     public static final String COLUMN_APP_NAME = "name";
 
-    /** テーブルのカラム:パッケージ名 */
+    /** アプリDBのカラム:パッケージ名 */
     public static final String COLUMN_APP_PACKAGE = "pkg";
 
-    /** テーブルのカラム:URL */
+    /** アプリDBのカラム:URL */
     public static final String COLUMN_APP_URL = "url";
+
+    /** アプリDBのカラム:ラベル */
+    public static final String COLUMN_APP_LABEL = "label";
 
     /** テーブルのソートオーダー */
     public static final String ASC = "ASC";
@@ -87,10 +92,28 @@ public class DBMainStore {
      * @param url URL
      */
     public void add(String name, String pkg, String url) {
+        add(name, pkg, url, "");
+    }
+
+    /**
+     * データベースにレコードを追加する。
+     * 
+     * @param name アプリ名
+     * @param pkg パッケージ名
+     * @param url URL
+     * @param labels ラベル(カンマ区切り、複数OK)
+     */
+    public void add(String name, String pkg, String url, String labels) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_APP_NAME, name);
         values.put(COLUMN_APP_PACKAGE, pkg);
         values.put(COLUMN_APP_URL, url);
+
+        // ラベルをカンマのみの区切りに整形
+        String label = splitWithCommaAndSpace(labels);
+        values.put(COLUMN_APP_LABEL, label);
+
+        // DBに追加する
         mDb.insert(TBL_NAME, null, values);
     }
 
@@ -102,11 +125,16 @@ public class DBMainStore {
      * @param pkg パッケージ名
      * @param url URL
      */
-    public void update(int _id, String name, String pkg, String url) {
+    public void update(int _id, String name, String pkg, String url, String labels) {
         ContentValues values = new ContentValues();
         values.put(COLUMN_APP_NAME, name);
         values.put(COLUMN_APP_PACKAGE, pkg);
         values.put(COLUMN_APP_URL, url);
+
+        // ラベルをカンマのみの区切りに整形
+        String label = splitWithCommaAndSpace(labels);
+        values.put(COLUMN_APP_LABEL, label);
+
         mDb.update(TBL_NAME, values, COLUMN_ID + "=?", new String[] {
             Integer.toString(_id)
         });
@@ -126,29 +154,30 @@ public class DBMainStore {
     }
 
     /**
-     * すべてのレコードをデータベースから取得する。
+     * すべてのレコードをアプリデータベースから取得する。
      * 
      * @param order 並び順を指定しない場合は、nullをセットすること。
      *            並び順を指定する場合は、"pkg DESC"のように、"COLUMN_NAME ASC|DESC"と指定すること。
      * @return すべてのレコードが格納されたArrayList
      */
-    public List<AppElement> fetchAllData(String order) {
+    public List<AppElement> fetchAllAppData(String order) {
         List<AppElement> data = new ArrayList<AppElement>();
         Cursor c = null;
         try {
             c = mDb.query(TBL_NAME, new String[] {
-                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL
+                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                    COLUMN_APP_LABEL
             }, null, null, null, null, order);
             c.moveToFirst();
             mCount = c.getCount();
             for (int i = 0; i < mCount; i++) {
                 AppElement elem = new AppElement(c.getString(1), c.getString(2), c.getString(3),
-                        c.getInt(0));
+                        c.getString(4), c.getInt(0));
                 data.add(elem);
                 c.moveToNext();
             }
         } catch (SQLException e) {
-            Log.e(LOG_TAG, "SQLException occurred..");
+            Log.e(LOG_TAG, "SQLException occurred..\n" + e.getMessage());
         } finally {
             if (c != null)
                 c.close();
@@ -157,7 +186,76 @@ public class DBMainStore {
     }
 
     /**
-     * データベースに格納されているレコードの件数を取得する。
+     * 特定のラベルを含むレコードをアプリデータベースから取得する。
+     * 
+     * @param filter フィルタリングするラベル
+     * @param order 並び順を指定しない場合は、nullをセットすること。
+     *            並び順を指定する場合は、"pkg DESC"のように、"COLUMN_NAME ASC|DESC"と指定すること。
+     * @return 特定のレコードが格納されたArrayList
+     */
+    public List<AppElement> fetchFilteredAppData(String filter, String order) {
+        List<AppElement> data = new ArrayList<AppElement>();
+        String where = DBMainStore.COLUMN_APP_LABEL + " like ?";
+        String param = "%" + filter + "%";
+        Cursor c = null;
+        try {
+            c = mDb.query(TBL_NAME, new String[] {
+                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                    COLUMN_APP_LABEL
+            }, where, new String[] {
+                param
+            }, null, null, order);
+            c.moveToFirst();
+            mCount = c.getCount();
+            for (int i = 0; i < mCount; i++) {
+                AppElement elem = new AppElement(c.getString(1), c.getString(2), c.getString(3),
+                        c.getString(4), c.getInt(0));
+                data.add(elem);
+                c.moveToNext();
+            }
+        } catch (SQLException e) {
+            Log.e(LOG_TAG, "SQLException occurred..\n" + e.getMessage());
+        } finally {
+            if (c != null)
+                c.close();
+        }
+        return data;
+    }
+
+    /**
+     * カラム名と値を使用して、特定のレコードをアプリデータベースから取得する。
+     * 
+     * @param column カラム名
+     * @param value 指定したカラムの特定の値
+     * @return 指定したカラムの特定の値が含まれるレコード、見つからなかった場合はnull
+     */
+    public AppElement fetchAppDataByColumnAndValue(String column, String value) {
+        AppElement data = new AppElement();
+        String where = column + "=\"" + value + "\"";
+        Cursor c = null;
+        try {
+            c = mDb.query(TBL_NAME, new String[] {
+                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                    COLUMN_APP_LABEL
+            }, where, null, null, null, null);
+            c.moveToFirst();
+            if (c.getCount() > 0) {
+                data = new AppElement(c.getString(1), c.getString(2), c.getString(3),
+                        c.getString(4), c.getInt(0));
+            } else {
+                return null;
+            }
+        } catch (SQLException e) {
+            Log.e(LOG_TAG, "SQLException occurred..\n" + e.getMessage());
+        } finally {
+            if (c != null)
+                c.close();
+        }
+        return data;
+    }
+
+    /**
+     * アプリデータベースに格納されているレコードの件数を取得する。
      * 
      * @return レコードの件数
      */

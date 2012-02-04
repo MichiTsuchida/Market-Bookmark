@@ -14,13 +14,13 @@ import android.util.Log;
 public class DBOpenHelper extends SQLiteOpenHelper {
 
     /** LOG TAG */
-    static final String LOG_TAG = "DBOpenHelper";
+    static final String LOG_TAG = "MarketBookmark";
 
     /** データベースの名前 */
     private static final String DB_NAME = "app_lists.db";
 
     /** データベースのバージョン */
-    private static final int DB_VERSION = 1;
+    private static final int DB_VERSION = 2;
 
     /** トランザクション管理のためのカウンタ??ｗ */
     private int mWritableDatabaseCount = 0;
@@ -35,11 +35,12 @@ public class DBOpenHelper extends SQLiteOpenHelper {
     }
 
     /**
-     * コンストラクタ
+     * コンストラクタ。
      * 
      * @param context
      */
     public DBOpenHelper(Context context) {
+        // DBのバージョンが更新されると、onUpgradeが呼ばれる
         super(context, DB_NAME, null, DB_VERSION);
     }
 
@@ -97,8 +98,8 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         db.beginTransaction();
         try {
             db.execSQL("CREATE TABLE IF NOT EXISTS " + DBMainStore.TBL_NAME
-                    + "( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " + "name TEXT, "
-                    + "pkg TEXT, " + "url TEXT );");
+                    + "( _id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT, "
+                    + "pkg TEXT, url TEXT, label TEXT );");
 
             // こんな感じでDB作成の段階でinsertすることもできる
             // SQLiteStatement stmt;
@@ -112,10 +113,10 @@ public class DBOpenHelper extends SQLiteOpenHelper {
             // stmt.executeInsert();
             // }
             db.setTransactionSuccessful();
-            Log.d(LOG_TAG, "Transaction success.");
+            Log.d(LOG_TAG, "Transaction success");
         } finally {
             db.endTransaction();
-            Log.d(LOG_TAG, "Transaction finish.");
+            Log.d(LOG_TAG, "Transaction finish");
         }
     }
 
@@ -123,7 +124,9 @@ public class DBOpenHelper extends SQLiteOpenHelper {
      * SQLiteOpenHelperクラスには、データベースをアップグレードする仕組みがある。<br>
      * SQLiteOpenHelperクラスのオブジェクトが生成されると、スキーマのバージョンのチェックが行われ、<br>
      * バージョンが変更されていると、このメソッドが呼び出される。<br>
-     * これはデータベース自体のアップグレードであって、レコードの更新メソッドではない。
+     * これはデータベース自体のアップグレードであって、レコードの更新メソッドではない。<br>
+     * <a href="http://gihyo.jp/dev/serial/01/androidapp/0008">
+     * 世界を目指せ！Androidアプリ開発入門：第8回　AndroidのSQLiteを学ぶ</a>を参考にした。
      * 
      * @param db データベース
      * @param oldVersion 旧バージョン番号
@@ -131,6 +134,10 @@ public class DBOpenHelper extends SQLiteOpenHelper {
      */
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // TODO Auto-generated method stub
+        Log.d(LOG_TAG, "Upgrade database, oldVer: " + oldVersion + ", newVer: " + newVersion);
+        if (oldVersion == 1) {
+            // カラム「ラベル」を追加する
+            db.execSQL("ALTER TABLE " + DBMainStore.TBL_NAME + " ADD COLUMN label TEXT;");
+        }
     }
 }

@@ -2,6 +2,7 @@
 package com.michitsuchida.marketfavoritter.main;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import android.app.Activity;
@@ -32,7 +33,7 @@ import android.widget.Toast;
 import com.michitsuchida.marketfavoritter.db.DBMainStore;
 
 /**
- * このアプリのメインのActivity
+ * このアプリのメインのActivity。Bookmark一覧を表示する。
  * 
  * @author MichiTsuchida
  */
@@ -44,10 +45,23 @@ public class MarketFavoritterActivity extends Activity {
     /** SharedPreferenceに保存するためのキー */
     private static final String SHARED_PREF_KEY_SORT_ODER = "SortOrder";
 
+    private static final String SHARED_PREF_KEY_FILTER = "Filter";
+
     /** メニューID */
+    // 並び替え
     private final int MENU_ID1 = Menu.FIRST;
 
+    // フィルタ
     private final int MENU_ID2 = Menu.FIRST + 1;
+
+    // アイテム編集
+    private final int MENU_ID3 = Menu.FIRST + 2;
+
+    // アイテム削除
+    private final int MENU_ID4 = Menu.FIRST + 3;
+
+    // 他のアプリに共有
+    private final int MENU_ID5 = Menu.FIRST + 4;
 
     /** アプリのリスト */
     private List<AppElement> mAppList = new ArrayList<AppElement>();
@@ -59,34 +73,65 @@ public class MarketFavoritterActivity extends Activity {
     private SharedPreferences mSharedPref;
 
     /**
-     * onCreate
+     * onCreate.
      * 
      * @param savedInstanceState
      */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(LOG_TAG, "onCreate()");
 
         // SharedPreferenceオブジェクトの初期化
         mSharedPref = PreferenceManager.getDefaultSharedPreferences(this);
 
         setContentView(R.layout.main);
-        mMainStore = new DBMainStore(this, true);
+        if (mMainStore == null) {
+            mMainStore = new DBMainStore(this, true);
+        }
         buildListView();
     }
 
     /**
-     * onRestart
+     * onRestart.
      */
     @Override
     public void onRestart() {
         super.onRestart();
-        mMainStore = new DBMainStore(this, true);
+        Log.d(LOG_TAG, "onRestert()");
+        if (mMainStore == null) {
+            mMainStore = new DBMainStore(this, true);
+        }
         buildListView();
     }
 
     /**
-     * メニューボタンが押された場合の処理
+     * onResume.
+     */
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d(LOG_TAG, "onResume()");
+        if (mMainStore == null) {
+            mMainStore = new DBMainStore(this, true);
+        }
+        buildListView();
+    }
+
+    /**
+     * onPause.
+     */
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d(LOG_TAG, "onPause()");
+        mMainStore.close();
+        mMainStore = null;
+        putFilter("");
+    }
+
+    /**
+     * メニューボタンが押された時のイベントハンドラ。
      * 
      * @param menu メニュー
      * @return メニューが表示される場合はtrue、そうでなければfalse
@@ -95,12 +140,15 @@ public class MarketFavoritterActivity extends Activity {
     public boolean onCreateOptionsMenu(Menu menu) {
         boolean ret = super.onCreateOptionsMenu(menu);
         menu.add(0, MENU_ID1, Menu.NONE, R.string.menu_sort_item);
-        menu.add(0, MENU_ID2, Menu.NONE, R.string.menu_remove_item);
+        menu.add(0, MENU_ID2, Menu.NONE, R.string.menu_filter_item);
+        menu.add(0, MENU_ID3, Menu.NONE, R.string.menu_edit_item);
+        menu.add(0, MENU_ID4, Menu.NONE, R.string.menu_remove_item);
+        menu.add(0, MENU_ID5, Menu.NONE, R.string.menu_share_item);
         return ret;
     }
 
     /**
-     * メニューから項目を選択された場合の処理<br>
+     * メニューから項目を選択された時のイベントハンドラ。
      * 
      * @param item メニューアイテム
      * @return メニューアイテムが表示される場合はtrue、そうでなければfalse
@@ -113,9 +161,9 @@ public class MarketFavoritterActivity extends Activity {
             // リストをソート
             case MENU_ID1:
                 String[] orders = this.getResources().getStringArray(R.array.sort_order);
-                AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-                dialog.setTitle(R.string.sort_title);
-                dialog.setItems(orders, new DialogInterface.OnClickListener() {
+                AlertDialog.Builder dialogSort = new AlertDialog.Builder(this);
+                dialogSort.setTitle(R.string.sort_title);
+                dialogSort.setItems(orders, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         switch (which) {
@@ -147,56 +195,190 @@ public class MarketFavoritterActivity extends Activity {
                             default:
                                 // do nothing.
                                 break;
+                        } /* switch */
+                    } /* onClick() */
+                }); /* setItems() */
+                dialogSort.show();
+                break;
+
+            // リストをlabelでフィルタリング
+            case MENU_ID2:
+                // 「フィルタをクリア」
+                String clearLabel = getString(R.string.filter_clear_label);
+
+                // すべてのデータのラベル部分を取得する
+                List<AppElement> apps = mMainStore.fetchAllAppData(null);
+                List<String> labelList = new ArrayList<String>();
+                for (AppElement elem : apps) {
+                    labelList.add(elem.getLabel());
+                }
+                // Log.d(LOG_TAG, labelList.toString());
+                // ラベルの重複をなくす
+                List<String> splittedLabelList = new ArrayList<String>();
+                for (String string1 : labelList) {
+                    String[] str = string1.split(",");
+                    for (String string2 : str) {
+                        splittedLabelList.add(string2);
+                    }
+                }
+                // Log.d(LOG_TAG, splittedLabelList.toString());
+                List<String> duplicatedLabelList = new ArrayList<String>();
+                for (int i = 0; i < splittedLabelList.size(); i++) {
+                    if (!duplicatedLabelList.contains(splittedLabelList.get(i))) {
+                        duplicatedLabelList.add(splittedLabelList.get(i));
+                    }
+                }
+                // 完成したラベルリストを並び替える
+                Collections.sort(duplicatedLabelList);
+
+                // リストの最初に「フィルタをクリア」を格納し、リストを配列に変換
+                duplicatedLabelList.add(0, clearLabel);
+                Log.d(LOG_TAG, duplicatedLabelList.toString());
+                final String[] labelArray = duplicatedLabelList.toArray(new String[0]);
+
+                AlertDialog.Builder dialogFilter = new AlertDialog.Builder(this);
+                dialogFilter.setTitle(R.string.filter_title);
+                dialogFilter.setItems(labelArray, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int labelIndex) {
+                        if (labelIndex == 0) {
+                            // 「フィルタをクリア」だから、SharedPreferenceの値をリセットする
+                            putFilter("");
+                            buildListView();
+                        } else {
+                            // 「フィルタをクリア」以外だったらフィルタリングする
+                            filter(labelArray[labelIndex]);
                         }
                     }
                 });
-                dialog.show();
+                dialogFilter.show();
                 break;
 
-            // リストから削除
-            case MENU_ID2:
-                List<String> ids = new ArrayList<String>();
+            // リストを編集
+            case MENU_ID3:
+                List<String> editIds = new ArrayList<String>();
                 for (int i = 0; i < mAppList.size(); i++) {
                     if (mAppList.get(i).getIsChecked()) {
-                        ids.add(String.valueOf(mAppList.get(i).get_id()));
+                        editIds.add(String.valueOf(mAppList.get(i).get_id()));
                     }
                 }
-                if (ids.size() > 0) {
-                    mMainStore.delete(ids.toArray(new String[] {}));
-                    Log.i(LOG_TAG, "Selected item was deleted.");
+
+                if (editIds.size() > 0) {
+                    // 編集画面のActivityをチェックついたアイテムの数だけ呼び出す
+                    for (int i = 0; i < editIds.size(); i++) {
+                        // 編集画面を呼び出す
+                        Intent intent = new Intent(this, MarketFavoritterEditActivity.class);
+                        // _idだけ渡して向こうでデータを取得する
+                        intent.putExtra("ID", editIds.get(i));
+                        startActivity(intent);
+                    }
                     buildListView();
                 } else {
-                    Log.i(LOG_TAG, "There are no selected item(s).");
+                    Log.i(LOG_TAG, "There are no selected item(s) of edit");
                     Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG)
                             .show();
                 }
                 break;
 
+            // リストから削除
+            case MENU_ID4:
+                final List<String> delIds = new ArrayList<String>();
+                for (int i = 0; i < mAppList.size(); i++) {
+                    if (mAppList.get(i).getIsChecked()) {
+                        delIds.add(String.valueOf(mAppList.get(i).get_id()));
+                    }
+                }
+
+                if (delIds.size() > 0) {
+                    AlertDialog.Builder dialogRemove = new AlertDialog.Builder(this);
+                    dialogRemove.setTitle(R.string.dialog_remove_title);
+                    dialogRemove.setMessage(R.string.dialog_remove_text);
+
+                    // OKボタン
+                    dialogRemove.setPositiveButton(R.string.button_ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int i) {
+                                    mMainStore.delete(delIds.toArray(new String[] {}));
+                                    Log.i(LOG_TAG, "Selected item was deleted");
+                                    buildListView();
+                                }
+                            });
+                    // キャンセルボタン
+                    dialogRemove.setNegativeButton(R.string.button_cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int i) {
+                                    // 何もしない
+                                }
+                            });
+                    // キャンセル可能にする
+                    dialogRemove.setCancelable(true);
+
+                    dialogRemove.show();
+                } else {
+                    Log.i(LOG_TAG, "There are no selected item(s) of delete");
+                    Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG)
+                            .show();
+                } /* if (delIds.size() > 0) */
+                break;
+
+            // アイテムを他のアプリに共有
+            // "<アプリ名> <マーケットURL>"という感じのテキストを投げる
+            case MENU_ID5:
+                List<String> shareIds = new ArrayList<String>();
+                for (int i = 0; i < mAppList.size(); i++) {
+                    if (mAppList.get(i).getIsChecked()) {
+                        shareIds.add(String.valueOf(mAppList.get(i).get_id()));
+                    }
+                }
+                if (shareIds.size() == 1) {
+                    AppElement elem = mMainStore.fetchAppDataByColumnAndValue(
+                            DBMainStore.COLUMN_ID, shareIds.get(0));
+
+                    // Intentにアプリ名とマーケットのURLを埋め込む
+                    Intent intent = new Intent(Intent.ACTION_SEND);
+                    intent.setType("text/plain");
+                    intent.putExtra(Intent.EXTRA_TEXT,
+                            elem.getAppName() + " " + elem.getMarketUrl());
+                    try {
+                        // Intent投げる
+                        startActivity(Intent.createChooser(intent,
+                                getString(R.string.dialog_share_title) + elem.getAppName()));
+                    } catch (android.content.ActivityNotFoundException e) {
+                        // 該当するActivityがないときの処理
+                    }
+                } else if (shareIds.size() > 1) {
+                    Log.d(LOG_TAG, "There are many selected items " + shareIds.size());
+                    Toast.makeText(this, R.string.toast_many_item_is_checked, Toast.LENGTH_LONG)
+                            .show();
+                } else {
+                    Log.i(LOG_TAG, "There are no selected item to share");
+                    Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG)
+                            .show();
+                }
+                break;
+
+            // default
             default:
-
-        }
-
+                break;
+        } /* switch */
         return ret;
-    }
+    } /* onOptionsItemSelected() */
 
     /**
-     * アプリのリストを作成する
+     * アプリのリストを作成する。<br>
+     * 並び替えのオーダーがある場合は、それに従う。
      */
     private void buildListView() {
         // SharedPreferenceに保存された並び替えのオーダーを取得して、その順でリストを作成する
-        mAppList = mMainStore.fetchAllData(getSortOrder());
+        mAppList = mMainStore.fetchAllAppData(getSortOrder());
+
         if (mMainStore.getCount() == 0) {
             Log.i(LOG_TAG, "AppList is empty!!");
             finish();
             Toast.makeText(this, R.string.toast_no_item_in_list, Toast.LENGTH_LONG).show();
         }
-        // add add add...
-        // mAppList.add(new AppElement("SPモードメール",
-        // "jp.co.nttdocomo.carriermail",
-        // "https://market.android.com/details?id=jp.co.nttdocomo.carriermail"));
-        // mAppList.add(new AppElement("モバイルGoogleマップ",
-        // "com.google.android.apps.maps",
-        // "https://market.android.com/details?id=com.google.android.apps.maps"));
 
         AppElementAdapter adapter = new AppElementAdapter(this, R.id.inflaterLayout, mAppList);
         ListView listView = (ListView) findViewById(R.id.mainAppListView);
@@ -213,7 +395,7 @@ public class MarketFavoritterActivity extends Activity {
     private void sort(String orderColumn, String sortOrder) {
         String order = orderColumn + " " + sortOrder;
         Log.d(LOG_TAG, "Sort order: " + order);
-        mAppList = mMainStore.fetchAllData(order);
+        mAppList = mMainStore.fetchFilteredAppData(getFilter(), order);
 
         AppElementAdapter adapter = new AppElementAdapter(this, R.id.inflaterLayout, mAppList);
         ListView listView = (ListView) findViewById(R.id.mainAppListView);
@@ -221,6 +403,46 @@ public class MarketFavoritterActivity extends Activity {
 
         // 並び替えのオーダーを保存しておく
         putSortOrder(order);
+    }
+
+    /**
+     * フィルタリングを実行する。<br>
+     * フィルタリングした後、アプリのリスト作成まで行う。
+     * 
+     * @param filter フィルタリングするラベル
+     */
+    private void filter(String filter) {
+        Log.d(LOG_TAG, "Filter of: " + filter);
+        mAppList = mMainStore.fetchFilteredAppData(filter, getSortOrder());
+
+        AppElementAdapter adapter = new AppElementAdapter(this, R.id.inflaterLayout, mAppList);
+        ListView listView = (ListView) findViewById(R.id.mainAppListView);
+        listView.setAdapter(adapter);
+
+        // フィルタリングのラベルを保存しておく
+        putFilter(filter);
+    }
+
+    /**
+     * フィルタリングのラベルを取得する。<br>
+     * 初回起動時は値が無いので、第2引数の値をdefault値として取得する。<br>
+     * また、もし値が取得出来なかった時もこの値が取得される。
+     * 
+     * @return 取得したフィルタリングのラベル、値がない場合は""(空文字)
+     */
+    private String getFilter() {
+        return this.mSharedPref.getString(SHARED_PREF_KEY_FILTER, "");
+    }
+
+    /**
+     * フィルタリングのラベルをSharedPreferenceに書き込む。<br>
+     * 最後のcommit()を行った時点で書き込まれる。<br>
+     * 
+     * @param filter フィルタリングのラベル
+     */
+    private void putFilter(String filter) {
+        this.mSharedPref.edit().putString(SHARED_PREF_KEY_FILTER, filter).commit();
+        Log.d(LOG_TAG, "Filtering label put to share preference [" + filter + "]");
     }
 
     /**
@@ -237,17 +459,17 @@ public class MarketFavoritterActivity extends Activity {
     /**
      * 並び替えのオーダーをSharedPreferenceに書き込む。<br>
      * 最後のcommit()を行った時点で書き込まれる。<br>
-     * ＃それまではメモリに保持される??
      * 
      * @param order 並び替えのオーダー
      */
     private void putSortOrder(String order) {
         this.mSharedPref.edit().putString(SHARED_PREF_KEY_SORT_ODER, order).commit();
+        Log.d(LOG_TAG, "Sort order put to share preference [" + order + "]");
     }
 
     // ============================================================================================
     /**
-     * ArrayAdapterを拡張したインナークラス
+     * ArrayAdapterを拡張したインナークラス。
      */
     class AppElementAdapter extends ArrayAdapter<AppElement> {
 
@@ -258,7 +480,7 @@ public class MarketFavoritterActivity extends Activity {
         private LayoutInflater mInflater;
 
         /**
-         * コンストラクタ
+         * コンストラクタ。
          * 
          * @param context このアプリケーションのコンテキスト
          * @param resourceId リソースのID
@@ -272,7 +494,7 @@ public class MarketFavoritterActivity extends Activity {
         }
 
         /**
-         * AppElement分のViewをInflateして作成する
+         * AppElement分のViewをInflateして作成する。
          * 
          * @param position AppElementリストのインデックス
          * @param convertView View
@@ -285,7 +507,7 @@ public class MarketFavoritterActivity extends Activity {
             if (convertView == null) {
                 // 1行分layoutからViewの塊を生成
                 convertView = mInflater.inflate(R.layout.inflater, null);
-                Log.d(LOG_TAG, "New convertView create.");
+                // Log.d(LOG_TAG, "New convertView create");
             }
 
             // listからAppのデータ、viewから画面にくっついているViewを取り出して値を格納する
@@ -294,6 +516,16 @@ public class MarketFavoritterActivity extends Activity {
             appNameText.setText(app.getAppName());
             TextView appPkgText = (TextView) convertView.findViewById(R.id.inflaterAppPkgName);
             appPkgText.setText(app.getPkgName());
+            TextView appLabel = (TextView) convertView.findViewById(R.id.inflaterLabel);
+            // ラベルのカンマはスペースに直して表示する
+            String tmpLabel = app.getLabel();
+            if (tmpLabel == null) {
+                tmpLabel = "";
+                Log.d(LOG_TAG, "Label is empty!");
+            } else {
+                tmpLabel = app.getLabel().replace(",", " ");
+            }
+            appLabel.setText(tmpLabel);
 
             // Buttonを実装
             Button button = (Button) convertView.findViewById(R.id.inflaterButton);
@@ -309,19 +541,9 @@ public class MarketFavoritterActivity extends Activity {
                     // market://search?q=<words>
                     Uri uri = Uri.parse("market://details?id=" + app.getPkgName());
                     startActivity(new Intent(Intent.ACTION_VIEW, uri));
-                    Log.i(LOG_TAG, "Throw intent for AndroidMarket. Uri: " + uri.toString());
+                    Log.d(LOG_TAG, "Throw intent for AndroidMarket. Uri: " + uri.toString());
                 }
             });
-            // ButtonのかわりにViewをクリックしたらマーケットに飛ぶ(上手く動いてないｗ)
-            // convertView.setOnClickListener(new OnClickListener() {
-            // @Override
-            // public void onClick(View v) {
-            // Uri uri = Uri.parse("market://details?id=" + app.getPkgName());
-            // startActivity(new Intent(Intent.ACTION_VIEW, uri));
-            // Log.i(LOG_TAG, "Throw intent for AndroidMarket. Uri: " +
-            // uri.toString());
-            // }
-            // });
 
             // CheckBoxを実装
             CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.inflaterCheckBox);
@@ -343,10 +565,9 @@ public class MarketFavoritterActivity extends Activity {
             // OnCreateContextMenuListener() {
             // public void onCreateContextMenu(ContextMenu contextmenu, View
             // view, ContextMenuInfo contextmenuinfo) {
-            // ;
             // }
             // });
             return convertView;
-        }
-    }
+        } /* getView() */
+    } /* AppElementAdapter */
 }
