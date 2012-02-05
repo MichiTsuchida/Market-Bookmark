@@ -216,9 +216,12 @@ public class MarketFavoritterActivity extends Activity {
                 // ラベルの重複をなくす
                 List<String> splittedLabelList = new ArrayList<String>();
                 for (String string1 : labelList) {
-                    String[] str = string1.split(",");
-                    for (String string2 : str) {
-                        splittedLabelList.add(string2);
+                    // ラベルが1個もないとぬるぽになる
+                    if (string1 != null) {
+                        String[] str = string1.split(",");
+                        for (String string2 : str) {
+                            splittedLabelList.add(string2);
+                        }
                     }
                 }
                 // Log.d(LOG_TAG, splittedLabelList.toString());
