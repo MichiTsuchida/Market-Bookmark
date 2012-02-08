@@ -19,7 +19,7 @@
     <string name="menu_edit_item">Edit item</string>
     <string name="menu_filter_item">Filter by label</string>
     <string name="menu_remove_item">Remove item</string>
-    <string name="menu_share_item">Shere item</string>
+    <string name="menu_share_item">Share item</string>
     <string name="menu_sort_item">Sort item</string>
     <string name="checkbox_null_text"></string>
     <string name="progress_body">Getting the application name...</string>

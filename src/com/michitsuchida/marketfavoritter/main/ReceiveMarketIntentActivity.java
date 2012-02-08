@@ -47,7 +47,7 @@ public class ReceiveMarketIntentActivity extends Activity {
     public static final String PATTERN_FOR_TITLE_TAG = ".*<title>(.+)\\s-\\s.+</title>.*";
 
     /** マーケットアプリのパッケージ名 */
-    public static final String MARKET_URL_PREFIX = "https://market.android.com/details";
+    public static final String MARKET_URL = "market.android.com/details";
 
     /** <title>タグの内容を格納する */
     private String mTitle = "";
@@ -102,7 +102,7 @@ public class ReceiveMarketIntentActivity extends Activity {
                 Log.d(LOG_TAG, mUrl);
 
                 // 呼び出し元がマーケットかどうか判定
-                if (mUrl.indexOf(MARKET_URL_PREFIX) != -1) {
+                if (mUrl.contains(MARKET_URL)) {
                     // URLをパッケージ名に変換
                     mPkg = mUrl.substring(mUrl.indexOf("id=") + 3);
 
@@ -191,7 +191,7 @@ public class ReceiveMarketIntentActivity extends Activity {
                                     finish();
                                 }
                             }).show();
-                } /* if (mUrl.indexOf(MARKET_URL_PREFIX) != -1) */
+                } /* if (mUrl.indexOf(MARKET_URL) != -1) */
             } /* if (extras != null) */
         } /* if (Intent.ACTION_SEND.equals(action)) */
     } /* onCreate() */

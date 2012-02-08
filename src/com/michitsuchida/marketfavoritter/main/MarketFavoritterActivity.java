@@ -227,7 +227,8 @@ public class MarketFavoritterActivity extends Activity {
                 // Log.d(LOG_TAG, splittedLabelList.toString());
                 List<String> duplicatedLabelList = new ArrayList<String>();
                 for (int i = 0; i < splittedLabelList.size(); i++) {
-                    if (!duplicatedLabelList.contains(splittedLabelList.get(i))) {
+                    if (!duplicatedLabelList.contains(splittedLabelList.get(i))
+                            && splittedLabelList.equals("")) {
                         duplicatedLabelList.add(splittedLabelList.get(i));
                     }
                 }
