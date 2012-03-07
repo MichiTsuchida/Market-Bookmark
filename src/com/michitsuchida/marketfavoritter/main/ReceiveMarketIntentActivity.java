@@ -47,7 +47,7 @@ public class ReceiveMarketIntentActivity extends Activity {
     public static final String PATTERN_FOR_TITLE_TAG = ".*<title>(.+)\\s-\\s.+</title>.*";
 
     /** マーケットアプリのパッケージ名 */
-    public static final String MARKET_URL = "market.android.com/details";
+    public static final String MARKET_URL = "play.google.com/store/apps";
 
     /** <title>タグの内容を格納する */
     private String mTitle = "";
