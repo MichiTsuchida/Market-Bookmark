@@ -46,8 +46,11 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** <title>タグの内容をぶっこ抜く正規表現パターン */
     public static final String PATTERN_FOR_TITLE_TAG = ".*<title>(.+)\\s-\\s.+</title>.*";
 
-    /** マーケットアプリのパッケージ名 */
-    public static final String MARKET_URL = "play.google.com/store/apps";
+    /** マーケットアプリからのIntent URL */
+    public static final String MARKET_URL = "market.android.com/details";
+
+    /** Google playのアプリからのIntent URL */
+    public static final String GOOGLE_PLAY__URL = "play.google.com/store/apps";
 
     /** <title>タグの内容を格納する */
     private String mTitle = "";
@@ -102,7 +105,7 @@ public class ReceiveMarketIntentActivity extends Activity {
                 Log.d(LOG_TAG, mUrl);
 
                 // 呼び出し元がマーケットかどうか判定
-                if (mUrl.contains(MARKET_URL)) {
+                if (mUrl.contains(MARKET_URL) || mUrl.contains(GOOGLE_PLAY__URL)) {
                     // URLをパッケージ名に変換
                     mPkg = mUrl.substring(mUrl.indexOf("id=") + 3);
 
