@@ -1,8 +1,15 @@
 
 package com.michitsuchida.marketfavoritter.main;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.ClipboardManager;
@@ -85,6 +92,67 @@ public class MarketFavoritterEditActivity extends Activity {
             mEtLabel = (EditText) findViewById(R.id.editElementEditTextLabel);
             mEtLabel.setText(mLabel);
 
+            Button copyButton = (Button) findViewById(R.id.editElementUrlCopyButton);
+            copyButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    ClipboardManager clpbrd = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                    clpbrd.setText(mUrl);
+                    Toast.makeText(context, mUrl + getString(R.string.toast_copied_to_clipboard),
+                            Toast.LENGTH_LONG).show();
+
+                }
+            });
+
+            Button labelSuggestButton = (Button) findViewById(R.id.editElementSuggestLabelButton);
+            labelSuggestButton.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    // ダイアログに表示するアイテムと、アイテムがチェックされたかのフラグの配列
+                    final String[] labelArray = buildSuggestionLabelList();
+                    final boolean[] labelFlags = new boolean[labelArray.length];
+
+                    AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+                    dialog.setTitle(R.string.dialog_suggest_label_title);
+
+                    // チェックボックスのダイアログ
+                    dialog.setMultiChoiceItems(labelArray, labelFlags,
+                            new OnMultiChoiceClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which,
+                                        boolean isChecked) {
+                                    labelFlags[which] = isChecked;
+                                }
+                            });
+                    // OKボタン
+                    dialog.setPositiveButton(R.string.button_ok,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    StringBuffer buff = new StringBuffer();
+                                    // チェックが付けられたラベルをカンマで結合
+                                    for (int i = 0; i < labelArray.length; i++) {
+                                        if (labelFlags[i]) {
+                                            buff.append(labelArray[i]);
+                                            buff.append(",");
+                                        }
+                                    }
+                                    // ラベルのテキストボックスに反映
+                                    mEtLabel.setText(buff);
+                                }
+                            });
+                    // キャンセルボタン
+                    dialog.setNegativeButton(R.string.button_cancel,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // 何もしない
+                                }
+                            });
+                    dialog.show();
+                }
+            });
+
             Button addButton = (Button) findViewById(R.id.editElementButton);
             addButton.setOnClickListener(new OnClickListener() {
                 @Override
@@ -102,18 +170,45 @@ public class MarketFavoritterEditActivity extends Activity {
                     Log.d(LOG_TAG, "Edited " + mAppName + ":" + mLabel);
                 }
             });
+        }
+    }
 
-            Button copyButton = (Button) findViewById(R.id.editElementUrlCopyButton);
-            copyButton.setOnClickListener(new OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    ClipboardManager clpbrd = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                    clpbrd.setText(mUrl);
-                    Toast.makeText(context, mUrl + getString(R.string.toast_copied_to_clipboard),
-                            Toast.LENGTH_LONG).show();
-
+    /**
+     * ラベルの一覧を作成する。
+     * 
+     * @return ラベル一覧の配列
+     */
+    private String[] buildSuggestionLabelList() {
+        // すべてのデータのラベル部分を取得する
+        DBMainStore mainStore = new DBMainStore(this, true);
+        List<AppElement> apps = mainStore.fetchAllAppData(null);
+        List<String> labelList = new ArrayList<String>();
+        for (AppElement elem : apps) {
+            labelList.add(elem.getLabel());
+        }
+        // Log.d(LOG_TAG, labelList.toString());
+        // ラベルの重複をなくす
+        List<String> splittedLabelList = new ArrayList<String>();
+        for (String string1 : labelList) {
+            // ラベルが1個もないとぬるぽになる
+            if (string1 != null) {
+                String[] str = string1.split(",");
+                for (String string2 : str) {
+                    splittedLabelList.add(string2);
                 }
-            });
-        } /* if (extras != null) */
-    } /* onCreate() */
+            }
+        }
+        // Log.d(LOG_TAG, splittedLabelList.toString());
+        List<String> duplicatedLabelList = new ArrayList<String>();
+        for (int i = 0; i < splittedLabelList.size(); i++) {
+            if (!duplicatedLabelList.contains(splittedLabelList.get(i))
+                    && !splittedLabelList.get(i).equals("")) {
+                duplicatedLabelList.add(splittedLabelList.get(i));
+            }
+        }
+        // 完成したラベルリストを並び替える
+        Collections.sort(duplicatedLabelList);
+
+        return duplicatedLabelList.toArray(new String[duplicatedLabelList.size()]);
+    }
 }

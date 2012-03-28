@@ -255,7 +255,36 @@ public class DBMainStore {
     }
 
     /**
+     * 特定のラベルを含むレコードの件数を取得する。
+     * 
+     * @param filter 件数を取得するラベル
+     * @return 特定のラベルを含むレコードの件数
+     */
+    public int getAppCountOfLabel(String filter) {
+        int count = 0;
+        String where = DBMainStore.COLUMN_APP_LABEL + " like ?";
+        String param = "%" + filter + "%";
+        Cursor c = null;
+        try {
+            c = mDb.query(TBL_NAME, new String[] {
+                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                    COLUMN_APP_LABEL
+            }, where, new String[] {
+                param
+            }, null, null, null);
+            count = c.getCount();
+        } catch (SQLException e) {
+            Log.e(LOG_TAG, "SQLException occurred..\n" + e.getMessage());
+        } finally {
+            if (c != null)
+                c.close();
+        }
+        return count;
+    }
+
+    /**
      * アプリデータベースに格納されているレコードの件数を取得する。
+     * リアルタイム更新ではなく、fetchAllAppData()かfetchFilteredAppData()が実行された際に更新される。
      * 
      * @return レコードの件数
      */

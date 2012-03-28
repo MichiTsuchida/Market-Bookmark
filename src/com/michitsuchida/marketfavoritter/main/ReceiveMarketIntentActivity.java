@@ -4,6 +4,9 @@ package com.michitsuchida.marketfavoritter.main;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -15,6 +18,7 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
@@ -49,8 +53,8 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** マーケットアプリからのIntent URL */
     public static final String MARKET_URL = "market.android.com/details";
 
-    /** Google playのアプリからのIntent URL */
-    public static final String GOOGLE_PLAY__URL = "play.google.com/store/apps";
+    /** Google playストアからのIntent URL */
+    public static final String GOOGLE_PLAY_URL = "play.google.com/store/apps";
 
     /** <title>タグの内容を格納する */
     private String mTitle = "";
@@ -105,7 +109,7 @@ public class ReceiveMarketIntentActivity extends Activity {
                 Log.d(LOG_TAG, mUrl);
 
                 // 呼び出し元がマーケットかどうか判定
-                if (mUrl.contains(MARKET_URL) || mUrl.contains(GOOGLE_PLAY__URL)) {
+                if (mUrl.contains(MARKET_URL) || mUrl.contains(GOOGLE_PLAY_URL)) {
                     // URLをパッケージ名に変換
                     mPkg = mUrl.substring(mUrl.indexOf("id=") + 3);
 
@@ -132,8 +136,8 @@ public class ReceiveMarketIntentActivity extends Activity {
                     } else {
                         // 1.プログレスバーをくるくる
                         mProg = new ProgressDialog(this);
-                        mProg.setTitle(R.string.progress_title);
-                        mProg.setMessage(getString(R.string.progress_body));
+                        mProg.setTitle(R.string.progress_app_name_title);
+                        mProg.setMessage(getString(R.string.progress_app_name_body));
                         mProg.show();
 
                         // Viewに情報をセットする
@@ -144,6 +148,67 @@ public class ReceiveMarketIntentActivity extends Activity {
                         TextView tvUrl = (TextView) findViewById(R.id.marketLinkTextUrlBody);
                         tvUrl.setText(mUrl);
                         mEtLabel = (EditText) findViewById(R.id.marketLinkEditTextLabel);
+
+                        Button copyButton = (Button) findViewById(R.id.marketLinkUrlCopyButton);
+                        copyButton.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                ClipboardManager clpbrd = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                                clpbrd.setText(mUrl);
+                                Toast.makeText(context,
+                                        mUrl + getString(R.string.toast_copied_to_clipboard),
+                                        Toast.LENGTH_LONG).show();
+                            }
+                        });
+
+                        Button labelSuggestButton = (Button) findViewById(R.id.marketLinkSuggestLabelButton);
+                        labelSuggestButton.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                // ダイアログに表示するアイテムと、アイテムがチェックされたかのフラグの配列
+                                final String[] labelArray = buildSuggestionLabelList();
+                                final boolean[] labelFlags = new boolean[labelArray.length];
+
+                                AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+                                dialog.setTitle(R.string.dialog_suggest_label_title);
+
+                                // チェックボックスのダイアログ
+                                dialog.setMultiChoiceItems(labelArray, labelFlags,
+                                        new OnMultiChoiceClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which,
+                                                    boolean isChecked) {
+                                                labelFlags[which] = isChecked;
+                                            }
+                                        });
+                                // OKボタン
+                                dialog.setPositiveButton(R.string.button_ok,
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                StringBuffer buff = new StringBuffer();
+                                                // チェックが付けられたラベルをカンマで結合
+                                                for (int i = 0; i < labelArray.length; i++) {
+                                                    if (labelFlags[i]) {
+                                                        buff.append(labelArray[i]);
+                                                        buff.append(",");
+                                                    }
+                                                }
+                                                // ラベルのテキストボックスに反映
+                                                mEtLabel.setText(buff);
+                                            }
+                                        });
+                                // キャンセルボタン
+                                dialog.setNegativeButton(R.string.button_cancel,
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                // 何もしない
+                                            }
+                                        });
+                                dialog.show();
+                            }
+                        });
 
                         Button addButton = (Button) findViewById(R.id.marketLinkAddButton);
                         addButton.setOnClickListener(new OnClickListener() {
@@ -161,18 +226,6 @@ public class ReceiveMarketIntentActivity extends Activity {
                                         mAppName + getString(R.string.toast_added_item),
                                         Toast.LENGTH_LONG).show();
                                 Log.d(LOG_TAG, "Add to Market Bookmark. App name: " + mAppName);
-                            }
-                        });
-
-                        Button copyButton = (Button) findViewById(R.id.marketLinkUrlCopyButton);
-                        copyButton.setOnClickListener(new OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                ClipboardManager clpbrd = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                                clpbrd.setText(mUrl);
-                                Toast.makeText(context,
-                                        mUrl + getString(R.string.toast_copied_to_clipboard),
-                                        Toast.LENGTH_LONG).show();
                             }
                         });
 
@@ -194,10 +247,10 @@ public class ReceiveMarketIntentActivity extends Activity {
                                     finish();
                                 }
                             }).show();
-                } /* if (mUrl.indexOf(MARKET_URL) != -1) */
-            } /* if (extras != null) */
-        } /* if (Intent.ACTION_SEND.equals(action)) */
-    } /* onCreate() */
+                }
+            }
+        }
+    }
 
     /**
      * メインとは別のアプリ名を取得するためのスレッド。
@@ -310,8 +363,47 @@ public class ReceiveMarketIntentActivity extends Activity {
                 } catch (Exception e) {
                     // FroyoだけHttpsURLConnectionにバグがあってNullPtrExが出ちゃう。。
                     e.printStackTrace();
-                } /* try in finally */
-            } /* try */
-        } /* for */
-    } /* doRequest() */
+                }
+            }
+        }
+    }
+
+    /**
+     * ラベルの一覧を作成する。
+     * 
+     * @return ラベル一覧の配列
+     */
+    private String[] buildSuggestionLabelList() {
+        // すべてのデータのラベル部分を取得する
+        DBMainStore mainStore = new DBMainStore(this, true);
+        List<AppElement> apps = mainStore.fetchAllAppData(null);
+        List<String> labelList = new ArrayList<String>();
+        for (AppElement elem : apps) {
+            labelList.add(elem.getLabel());
+        }
+        // Log.d(LOG_TAG, labelList.toString());
+        // ラベルの重複をなくす
+        List<String> splittedLabelList = new ArrayList<String>();
+        for (String string1 : labelList) {
+            // ラベルが1個もないとぬるぽになる
+            if (string1 != null) {
+                String[] str = string1.split(",");
+                for (String string2 : str) {
+                    splittedLabelList.add(string2);
+                }
+            }
+        }
+        // Log.d(LOG_TAG, splittedLabelList.toString());
+        List<String> duplicatedLabelList = new ArrayList<String>();
+        for (int i = 0; i < splittedLabelList.size(); i++) {
+            if (!duplicatedLabelList.contains(splittedLabelList.get(i))
+                    && !splittedLabelList.get(i).equals("")) {
+                duplicatedLabelList.add(splittedLabelList.get(i));
+            }
+        }
+        // 完成したラベルリストを並び替える
+        Collections.sort(duplicatedLabelList);
+
+        return duplicatedLabelList.toArray(new String[duplicatedLabelList.size()]);
+    }
 }

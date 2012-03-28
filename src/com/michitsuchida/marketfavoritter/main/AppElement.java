@@ -33,10 +33,10 @@ public class AppElement {
     }
 
     /**
-     * @param mAppName
-     * @param mPkgName
-     * @param mMarketUrl
-     * @param mLabel
+     * @param AppName
+     * @param PkgName
+     * @param MarketUrl
+     * @param Label
      * @param _id
      */
     public AppElement(String appName, String pkgName, String marketUrl, String label, int _id) {
@@ -71,12 +71,24 @@ public class AppElement {
         return mAppName;
     }
 
+    public void setAppName(String appName) {
+        this.mAppName = appName;
+    }
+
     public String getPkgName() {
         return mPkgName;
     }
 
+    public void setPkgName(String pkg) {
+        this.mPkgName = pkg;
+    }
+
     public String getMarketUrl() {
         return mMarketUrl;
+    }
+
+    public void setMarketUrl(String url) {
+        this.mMarketUrl = url;
     }
 
     public int get_id() {
@@ -97,5 +109,21 @@ public class AppElement {
 
     public void setLabel(String label) {
         this.mLabel = label;
+    }
+
+    public String toString() {
+        StringBuffer buff = new StringBuffer();
+        buff.append("AppName=");
+        buff.append(mAppName);
+        buff.append(", ");
+        buff.append("Package=");
+        buff.append(mPkgName);
+        buff.append(", ");
+        buff.append("MarketUrl=");
+        buff.append(mMarketUrl);
+        buff.append(", ");
+        buff.append("Label=");
+        buff.append(mLabel);
+        return buff.toString();
     }
 }

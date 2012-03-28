@@ -14,7 +14,7 @@ public class StringUtils {
     /**
      * パラメータで受け取った文字列の全角/半角スペースをカンマに置換する。
      * 
-     * @param text
+     * @param text 文字列
      * @return カンマ区切りの文字列
      */
     public static String splitWithCommaAndSpace(String text) {
@@ -38,5 +38,27 @@ public class StringUtils {
             }
         }
         return buff.toString();
+    }
+
+    /** XMLで書き出すときのRoot要素の開始タグ */
+    public static final String XML_ROOT_ELEMENT_START = "<marketbookmark>";
+
+    /** XMLで書き出すときのRoot要素の終了タグ */
+    public static final String XML_ROOT_ELEMENT_END = "</marketbookmark>";
+
+    /**
+     * パラメータで受け取ったAppElementの情報を、XML形式に変換する。
+     * ルート要素の&lt;marketbookmark&gt;&lt;/marketbookmark&gt;は追加されないので気を付けること。
+     * 
+     * @param appName アプリケーション名
+     * @param pkg パッケージ名
+     * @param label ラベル
+     * @return XMLフォーマットの文字列
+     */
+    public static String convertAppElementToXmlFormat(String appName, String pkg, String url,
+            String label) {
+        String element = "<app name=\"" + appName + "\" pkg=\"" + pkg + "\" url=\"" + url
+                + "\"><label name=\"" + label + "\" /></app>";
+        return element;
     }
 }

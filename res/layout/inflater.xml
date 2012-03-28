@@ -6,9 +6,9 @@ ListView用レイアウト定義XMLファイル。
 + CheckBox | Top text              | Button +
 +          | Bottom text           |        +
 +          | Label texts           |        +
-+ - - - - - - - - - - - - - - - - - - - - - +
++ - - - - - - - - - - - - - - - - - - - - - +
 -->
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/inflaterLayout"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
@@ -20,12 +20,13 @@ ListView用レイアウト定義XMLファイル。
         android:id="@+id/linearLayout3"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content" >
+
         <CheckBox
             android:id="@+id/inflaterCheckBox"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginLeft="5sp"
             android:text="@string/checkbox_null_text" />
+
         <LinearLayout
             android:id="@+id/inflaterTextLayout"
             android:layout_width="fill_parent"
@@ -33,6 +34,7 @@ ListView用レイアウト定義XMLファイル。
             android:layout_weight="1"
             android:gravity="center_vertical|center_horizontal"
             android:orientation="vertical" >
+
             <TextView
                 android:id="@+id/inflaterAppName"
                 android:layout_width="wrap_content"
@@ -40,9 +42,10 @@ ListView用レイアウト定義XMLファイル。
                 android:layout_gravity="left"
                 android:layout_marginTop="5sp"
                 android:text="inflaterTop"
-                android:textColor='#FF00BFFF'
+                android:textColor="#FF00BFFF"
                 android:textSize="18sp"
                 android:textStyle="bold" />
+
             <TextView
                 android:id="@+id/inflaterAppPkgName"
                 android:layout_width="wrap_content"
@@ -51,6 +54,7 @@ ListView用レイアウト定義XMLファイル。
                 android:text="inflaterBottom"
                 android:textColor="#a9a9a9"
                 android:textSize="15sp" />
+
             <TextView
                 android:id="@+id/inflaterLabel"
                 android:layout_width="wrap_content"
@@ -62,12 +66,14 @@ ListView用レイアウト定義XMLファイル。
                 android:textSize="15sp"
                 android:textStyle="bold" />
         </LinearLayout>
+
         <Button
             android:id="@+id/inflaterButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="5sp"
-            android:layout_weight="0"
-            android:text="@string/button_market" />
+            android:layout_gravity="right|center"
+            android:text="@string/button_market"
+            android:textSize="12sp" />
     </LinearLayout>
+
 </LinearLayout>

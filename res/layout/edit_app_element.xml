@@ -38,7 +38,7 @@
                 android:layout_marginTop="10sp">
             </TextView>
             <LinearLayout
-                android:id="@+id/linearLayout1"
+                android:id="@+id/editElementUrlLayout"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false" >
@@ -61,15 +61,31 @@
                     android:layout_marginRight="10sp">
                 </Button>
             </LinearLayout>
-            <TextView
-                android:id="@+id/editElementTextLabel"
-                android:text="@string/text_label"
-                android:textSize="10pt"
+            <LinearLayout
+                android:id="@+id/editElementLabelLayout"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_width="wrap_content"
-                android:layout_marginTop="10sp"
-                android:layout_marginBottom="10sp">
-            </TextView>
+                android:baselineAligned="false" >
+	            <TextView
+	                android:id="@+id/editElementTextLabel"
+	                android:text="@string/text_label"
+	                android:textSize="10pt"
+	                android:layout_height="wrap_content"
+	                android:layout_width="wrap_content"
+                    android:layout_gravity="center"
+	                android:layout_marginTop="10sp"
+	                android:layout_marginBottom="10sp"
+	                android:layout_weight="1">
+                </TextView>
+                <Button
+                    android:id="@+id/editElementSuggestLabelButton"
+                    android:text="@string/button_suggest_label"
+                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_marginTop="10sp"
+                    android:layout_marginRight="10sp">
+                </Button>
+            </LinearLayout>
             <EditText
                 android:id="@+id/editElementEditTextLabel"
                 android:layout_height="wrap_content"

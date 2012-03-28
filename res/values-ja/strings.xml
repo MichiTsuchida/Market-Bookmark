@@ -2,23 +2,38 @@
 <resources>
     <string name="button_add_bookmark">お気に入りに追加</string>
     <string name="button_cancel">キャンセル</string>
+    <string name="button_copy_url">コピー</string>
     <string name="button_edit_bookmark">お気に入りを編集</string>
+    <string name="button_export">エクスポート</string>
+    <string name="button_import">インポート</string>
+    <string name="button_suggest_label">ラベル\n履歴</string>
     <string name="dialog_add_item_title">お気に入りに追加</string>
     <string name="dialog_add_item_text">すでにデータベースに登録されています。</string>
+    <string name="dialog_import_or_export_title">インポート/エクスポート</string>
+    <string name="dialog_import_or_export_text">インポートすると、データベースに同じ情報があるものは無視されます。\nエクスポートすると、すでにSDカードにエクスポートしたバックアップは上書きされます。</string>
+    <string name="dialog_import_title">インポート</string>
+    <string name="dialog_import_text">SDカードからインポートしますか?</string>
     <string name="dialog_remove_title">アイテムを削除</string>
     <string name="dialog_remove_text">チェックを入れたアイテムを削除します。</string>
     <string name="dialog_share_title">共有する: </string>
     <string name="dialog_share_from_market_title">これは処理できません</string>
     <string name="dialog_share_from_market_text">Androidマーケットからアプリケーションを共有してください。</string>
+    <string name="dialog_suggest_label_title">履歴からラベルを入力</string>
+    <string name="dialog_suggest_label_text"></string>
     <string name="filter_clear_label">フィルタをクリア</string>
     <string name="filter_title">ラベルを選択</string>
     <string name="menu_edit_item">アイテムを編集</string>
     <string name="menu_filter_item">ラベルで絞込み</string>
+    <string name="menu_import_export">インポート/エクスポート</string>
     <string name="menu_remove_item">アイテムを削除</string>
     <string name="menu_share_item">共有</string>
     <string name="menu_sort_item">並び替え</string>
-    <string name="progress_body">アプリケーション名を取得しています。</string>
-    <string name="progress_title">通信中</string>
+    <string name="progress_app_name_body">アプリケーション名を取得しています..</string>
+    <string name="progress_app_name_title">通信中</string>
+    <string name="progress_export_body">エクスポート中..</string>
+    <string name="progress_export_title">エクスポート</string>
+    <string name="progress_import_body">インポート中..</string>
+    <string name="progress_import_title">インポート</string>
     <string-array name="sort_order">
         <item>デフォルト</item>
         <item>アプリケーション名</item>
@@ -30,6 +45,10 @@
     <string name="toast_added_item"> をお気に入りに登録しました。</string>
     <string name="toast_copied_to_clipboard"> をコピーしました。</string>
     <string name="toast_edited_item"> を編集しました。</string>
+    <string name="toast_export_xml_fail">エクスポートに失敗しました。SDカードがマウントされているか確認してください。</string>
+    <string name="toast_export_xml_success">エクスポート完了</string>
+    <string name="toast_import_xml_fail">インポートに失敗しました。SDカードがマウントされているか、"/SDカード/MarketBookmark/bookmarks.xml"に適切なファイルがあるかどうか確認してください。</string>
+    <string name="toast_import_xml_success">インポート完了</string>
     <string name="toast_no_item_in_list">お気に入りに何も登録されていません。\nマーケットでアプリを表示し、共有機能からお気に入りに登録してください。\nアプリを終了します。</string>
     <string name="toast_many_item_is_checked">複数のアイテムは選択できません。</string>
     <string name="toast_no_item_is_checked">アイテムにチェックを付けてから実行してください。</string>

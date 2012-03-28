@@ -7,12 +7,15 @@ import java.util.List;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -31,6 +34,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.michitsuchida.marketfavoritter.db.DBMainStore;
+import com.michitsuchida.marketfavoritter.util.SdUtils;
+import com.michitsuchida.marketfavoritter.util.StringUtils;
+import com.michitsuchida.marketfavoritter.util.XmlUtils;
 
 /**
  * このアプリのメインのActivity。Bookmark一覧を表示する。
@@ -46,6 +52,12 @@ public class MarketFavoritterActivity extends Activity {
     private static final String SHARED_PREF_KEY_SORT_ODER = "SortOrder";
 
     private static final String SHARED_PREF_KEY_FILTER = "Filter";
+
+    /** インポート処理のMessageのwhat */
+    private static final int MESSAGE_IMPORT = 0;
+
+    /** エクスポート処理のMessageのwhat */
+    private static final int MESSAGE_EXPORT = 1;
 
     /** メニューID */
     // 並び替え
@@ -63,6 +75,12 @@ public class MarketFavoritterActivity extends Activity {
     // 他のアプリに共有
     private final int MENU_ID5 = Menu.FIRST + 4;
 
+    // インポート/エクスポート
+    private final int MENU_ID6 = Menu.FIRST + 5;
+
+    /** このアプリのContext */
+    private final Context mContext = this;
+
     /** アプリのリスト */
     private List<AppElement> mAppList = new ArrayList<AppElement>();
 
@@ -71,6 +89,9 @@ public class MarketFavoritterActivity extends Activity {
 
     /** SharedPreferenceオブジェクト */
     private SharedPreferences mSharedPref;
+
+    /** 処理中にくるくるさせるダイアログ */
+    private ProgressDialog mProg;
 
     /**
      * onCreate.
@@ -89,7 +110,8 @@ public class MarketFavoritterActivity extends Activity {
         if (mMainStore == null) {
             mMainStore = new DBMainStore(this, true);
         }
-        buildListView();
+        // onResume()で呼ぶのでここでは呼ばない
+        // buildListView();
     }
 
     /**
@@ -144,6 +166,7 @@ public class MarketFavoritterActivity extends Activity {
         menu.add(0, MENU_ID3, Menu.NONE, R.string.menu_edit_item);
         menu.add(0, MENU_ID4, Menu.NONE, R.string.menu_remove_item);
         menu.add(0, MENU_ID5, Menu.NONE, R.string.menu_share_item);
+        menu.add(0, MENU_ID6, Menu.NONE, R.string.menu_import_export);
         return ret;
     }
 
@@ -195,54 +218,38 @@ public class MarketFavoritterActivity extends Activity {
                             default:
                                 // do nothing.
                                 break;
-                        } /* switch */
-                    } /* onClick() */
-                }); /* setItems() */
+                        }
+                    }
+                });
                 dialogSort.show();
                 break;
 
             // リストをlabelでフィルタリング
             case MENU_ID2:
-                // 「フィルタをクリア」
-                String clearLabel = getString(R.string.filter_clear_label);
+                final String[] labelArray = buildLabelList();
+                String[] labelArrayWithCount = new String[labelArray.length];
 
-                // すべてのデータのラベル部分を取得する
-                List<AppElement> apps = mMainStore.fetchAllAppData(null);
-                List<String> labelList = new ArrayList<String>();
-                for (AppElement elem : apps) {
-                    labelList.add(elem.getLabel());
-                }
-                // Log.d(LOG_TAG, labelList.toString());
-                // ラベルの重複をなくす
-                List<String> splittedLabelList = new ArrayList<String>();
-                for (String string1 : labelList) {
-                    // ラベルが1個もないとぬるぽになる
-                    if (string1 != null) {
-                        String[] str = string1.split(",");
-                        for (String string2 : str) {
-                            splittedLabelList.add(string2);
-                        }
+                // labelごとのアプリの数を数える
+                DBMainStore mainStore = new DBMainStore(this, true);
+                int appCount = 0;
+                // List<String> labelList = new ArrayList<String>();
+                for (int i = 0; i < labelArray.length; i++) {
+                    // 配列の最初には「フィルタをクリア」が入ってるのでそれは件数を数えない
+                    if (i == 0) {
+                        // labelList.add(labelArray[i]);
+                        labelArrayWithCount[i] = labelArray[i];
+                    } else {
+                        appCount = mainStore.getAppCountOfLabel(labelArray[i]);
+                        // labelList.add(labelArray[i] + "(" + appCount + ")");
+                        labelArrayWithCount[i] = labelArray[i] + "(" + appCount + ")";
                     }
                 }
-                // Log.d(LOG_TAG, splittedLabelList.toString());
-                List<String> duplicatedLabelList = new ArrayList<String>();
-                for (int i = 0; i < splittedLabelList.size(); i++) {
-                    if (!duplicatedLabelList.contains(splittedLabelList.get(i))
-                            && !splittedLabelList.get(i).equals("")) {
-                        duplicatedLabelList.add(splittedLabelList.get(i));
-                    }
-                }
-                // 完成したラベルリストを並び替える
-                Collections.sort(duplicatedLabelList);
-
-                // リストの最初に「フィルタをクリア」を格納し、リストを配列に変換
-                duplicatedLabelList.add(0, clearLabel);
-                Log.d(LOG_TAG, duplicatedLabelList.toString());
-                final String[] labelArray = duplicatedLabelList.toArray(new String[0]);
+                // String[] labelArrayWithCount = labelList.toArray(new
+                // String[labelList.size()]);
 
                 AlertDialog.Builder dialogFilter = new AlertDialog.Builder(this);
                 dialogFilter.setTitle(R.string.filter_title);
-                dialogFilter.setItems(labelArray, new DialogInterface.OnClickListener() {
+                dialogFilter.setItems(labelArrayWithCount, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int labelIndex) {
                         if (labelIndex == 0) {
@@ -303,7 +310,9 @@ public class MarketFavoritterActivity extends Activity {
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int i) {
-                                    mMainStore.delete(delIds.toArray(new String[] {}));
+                                    // mMainStore.delete(delIds.toArray(new
+                                    // String[] {}));
+                                    mMainStore.delete(delIds.toArray(new String[delIds.size()]));
                                     Log.i(LOG_TAG, "Selected item was deleted");
                                     buildListView();
                                 }
@@ -324,51 +333,106 @@ public class MarketFavoritterActivity extends Activity {
                     Log.i(LOG_TAG, "There are no selected item(s) of delete");
                     Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG)
                             .show();
-                } /* if (delIds.size() > 0) */
+                }
                 break;
 
             // アイテムを他のアプリに共有
-            // "<アプリ名> <マーケットURL>"という感じのテキストを投げる
             case MENU_ID5:
-                List<String> shareIds = new ArrayList<String>();
-                for (int i = 0; i < mAppList.size(); i++) {
-                    if (mAppList.get(i).getIsChecked()) {
-                        shareIds.add(String.valueOf(mAppList.get(i).get_id()));
-                    }
-                }
-                if (shareIds.size() == 1) {
-                    AppElement elem = mMainStore.fetchAppDataByColumnAndValue(
-                            DBMainStore.COLUMN_ID, shareIds.get(0));
+                buildShareIntent();
+                break;
 
-                    // Intentにアプリ名とマーケットのURLを埋め込む
-                    Intent intent = new Intent(Intent.ACTION_SEND);
-                    intent.setType("text/plain");
-                    intent.putExtra(Intent.EXTRA_TEXT,
-                            elem.getAppName() + " " + elem.getMarketUrl());
-                    try {
-                        // Intent投げる
-                        startActivity(Intent.createChooser(intent,
-                                getString(R.string.dialog_share_title) + elem.getAppName()));
-                    } catch (android.content.ActivityNotFoundException e) {
-                        // 該当するActivityがないときの処理
-                    }
-                } else if (shareIds.size() > 1) {
-                    Log.d(LOG_TAG, "There are many selected items " + shareIds.size());
-                    Toast.makeText(this, R.string.toast_many_item_is_checked, Toast.LENGTH_LONG)
-                            .show();
-                } else {
-                    Log.i(LOG_TAG, "There are no selected item to share");
-                    Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG)
-                            .show();
-                }
+            // インポート/エクスポート
+            case MENU_ID6:
+                importAndExport();
                 break;
 
             // default
             default:
                 break;
-        } /* switch */
+        }
         return ret;
-    } /* onOptionsItemSelected() */
+    }
+
+    /**
+     * 他のアプリに共有するためのIntentを作成する。<br>
+     * "<アプリ名> <マーケットURL>"という感じのテキストを投げる。
+     */
+    private void buildShareIntent() {
+        List<String> shareIds = new ArrayList<String>();
+        for (int i = 0; i < mAppList.size(); i++) {
+            if (mAppList.get(i).getIsChecked()) {
+                shareIds.add(String.valueOf(mAppList.get(i).get_id()));
+            }
+        }
+        if (shareIds.size() == 1) {
+            AppElement elem = mMainStore.fetchAppDataByColumnAndValue(DBMainStore.COLUMN_ID,
+                    shareIds.get(0));
+
+            // Intentにアプリ名とマーケットのURLを埋め込む
+            Intent intent = new Intent(Intent.ACTION_SEND);
+            intent.setType("text/plain");
+            intent.putExtra(Intent.EXTRA_TEXT, elem.getAppName() + " " + elem.getMarketUrl());
+            try {
+                // Intent投げる
+                startActivity(Intent.createChooser(intent, getString(R.string.dialog_share_title)
+                        + elem.getAppName()));
+            } catch (android.content.ActivityNotFoundException e) {
+                // 該当するActivityがないときの処理
+                e.printStackTrace();
+            }
+        } else if (shareIds.size() > 1) {
+            Log.d(LOG_TAG, "There are many selected items " + shareIds.size());
+            Toast.makeText(this, R.string.toast_many_item_is_checked, Toast.LENGTH_LONG).show();
+        } else {
+            Log.i(LOG_TAG, "There are no selected item to share");
+            Toast.makeText(this, R.string.toast_no_item_is_checked, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    /**
+     * ラベルの一覧を作成する。先頭に「フィルタをクリア」を格納する。
+     * 
+     * @return ラベル一覧の配列
+     */
+    private String[] buildLabelList() {
+        // 「フィルタをクリア」
+        String clearLabel = getString(R.string.filter_clear_label);
+
+        // すべてのデータのラベル部分を取得する
+        List<AppElement> apps = mMainStore.fetchAllAppData(null);
+        List<String> labelList = new ArrayList<String>();
+        for (AppElement elem : apps) {
+            labelList.add(elem.getLabel());
+        }
+        // Log.d(LOG_TAG, labelList.toString());
+        // ラベルの重複をなくす
+        List<String> splittedLabelList = new ArrayList<String>();
+        for (String string1 : labelList) {
+            // ラベルが1個もないとぬるぽになる
+            if (string1 != null) {
+                String[] str = string1.split(",");
+                for (String string2 : str) {
+                    splittedLabelList.add(string2);
+                }
+            }
+        }
+        // Log.d(LOG_TAG, splittedLabelList.toString());
+        List<String> duplicatedLabelList = new ArrayList<String>();
+        for (int i = 0; i < splittedLabelList.size(); i++) {
+            if (!duplicatedLabelList.contains(splittedLabelList.get(i))
+                    && !splittedLabelList.get(i).equals("")) {
+                duplicatedLabelList.add(splittedLabelList.get(i));
+            }
+        }
+        // 完成したラベルリストを並び替える
+        Collections.sort(duplicatedLabelList);
+
+        // リストの最初に「フィルタをクリア」を格納し、リストを配列に変換
+        duplicatedLabelList.add(0, clearLabel);
+        Log.d(LOG_TAG, duplicatedLabelList.toString());
+
+        return duplicatedLabelList.toArray(new String[duplicatedLabelList.size()]);
+    }
 
     /**
      * アプリのリストを作成する。<br>
@@ -380,14 +444,261 @@ public class MarketFavoritterActivity extends Activity {
 
         if (mMainStore.getCount() == 0) {
             Log.i(LOG_TAG, "AppList is empty!!");
-            finish();
-            Toast.makeText(this, R.string.toast_no_item_in_list, Toast.LENGTH_LONG).show();
+
+            // DBの件数が0件だったら、インポートしますか?的なダイアログを出す
+            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+            dialog.setTitle(R.string.dialog_import_title);
+            dialog.setMessage(R.string.dialog_import_text);
+            // OKボタン
+            dialog.setPositiveButton(R.string.button_ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int i) {
+                    // XMLをインポートする
+                    // 1.プログレスバーをくるくる
+                    mProg = new ProgressDialog(mContext);
+                    mProg.setTitle(R.string.progress_import_title);
+                    mProg.setMessage(getString(R.string.progress_import_body));
+                    mProg.show();
+                    // 2.別スレッドを生成して、インポートする
+                    (new Thread(importRunnable)).start();
+                }
+            });
+            // キャンセルボタン
+            dialog.setNegativeButton(R.string.button_cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int i) {
+                    // Activityを終了する
+                    finish();
+                    Toast.makeText(mContext, R.string.toast_no_item_in_list, Toast.LENGTH_LONG)
+                            .show();
+                }
+            });
+            dialog.show();
+
         }
 
-        AppElementAdapter adapter = new AppElementAdapter(this, R.id.inflaterLayout, mAppList);
+        AppElementAdapter adapter = new AppElementAdapter(mContext, R.id.inflaterLayout, mAppList);
         ListView listView = (ListView) findViewById(R.id.mainAppListView);
         listView.setAdapter(adapter);
     }
+
+    /**
+     * XMLフォーマットで書き出すための書式に成形する。
+     * 
+     * @param elements AppElementのリスト
+     * @return XMLフォーマットに整形された文字列
+     */
+    private String buildXmlString(List<AppElement> elements) {
+        StringBuffer buff = new StringBuffer();
+        buff.append(StringUtils.XML_ROOT_ELEMENT_START);
+        for (AppElement appElement : elements) {
+            buff.append(StringUtils.convertAppElementToXmlFormat(appElement.getAppName(),
+                    appElement.getPkgName(), appElement.getMarketUrl(), appElement.getLabel()));
+        }
+        buff.append(StringUtils.XML_ROOT_ELEMENT_END);
+        String xml = buff.toString();
+        Log.d(LOG_TAG, "Convert to XML");
+        // Log.d(LOG_TAG, "Convert to XML: " + xml);
+        return xml;
+    }
+
+    /**
+     * インポート/エクスポートを実行する。<br>
+     * エクスポートするときは、すでにXMLがある場合は上書きされる。<br>
+     * 処理中はプログレスバーを表示させる。
+     */
+    private void importAndExport() {
+        // インポートするかエクスポートするかのダイアログ出す
+        // すでにエクスポートしたXMLがある場合は上書きされる警告も出す
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        dialog.setTitle(R.string.dialog_import_or_export_title);
+        dialog.setMessage(R.string.dialog_import_or_export_text);
+
+        // インポートボタン
+        dialog.setPositiveButton(R.string.button_import, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int i) {
+                // XMLをインポートする
+                // 1.プログレスバーをくるくる
+                mProg = new ProgressDialog(mContext);
+                mProg.setTitle(R.string.progress_import_title);
+                mProg.setMessage(getString(R.string.progress_import_body));
+                mProg.show();
+                // 2.別スレッドを生成して、インポートする
+                (new Thread(importRunnable)).start();
+            }
+        });
+        // エクスポートボタン
+        dialog.setNegativeButton(R.string.button_export, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // XMLをエクスポートする
+                // 1.プログレスバーをくるくる
+                mProg = new ProgressDialog(mContext);
+                mProg.setTitle(R.string.progress_export_title);
+                mProg.setMessage(getString(R.string.progress_export_body));
+                mProg.show();
+                // 2.別スレッドを生成して、エクスポートする
+                (new Thread(exportRunnable)).start();
+            }
+        });
+        dialog.show();
+    }
+
+    /**
+     * インポート処理を実行するためのスレッド。
+     */
+    private Runnable importRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // 実際に別スレッドでやりたい処理はここで
+            // 3.UIのテキストを変更 UIを書き換える場合はHandlerに処理を渡す
+            boolean result = importXml();
+            Message msg = Message.obtain(handler, MESSAGE_IMPORT);
+            msg.obj = result;
+            handler.sendMessage(msg);
+
+            // 4.実際に行いたい処理が終わったらダイアログを消去
+            mProg.dismiss();
+        };
+    };
+
+    /**
+     * XMLを読み出し、DBに登録する。<br>
+     * 処理中はプログレスバーを表示させる。
+     * 
+     * @return DBへ登録成功した場合はtrue、エラー発生時はfalse
+     */
+    private boolean importXml() {
+        Log.i(LOG_TAG, "Import XML");
+        // XMLを読み出す
+        String importText = SdUtils.readFromSdCard();
+        if (importText != null) {
+            // Log.d(LOG_TAG, importText);
+            // 読み出せたらXMLをパースする
+            List<AppElement> appList = XmlUtils.analyzeXml(importText);
+            if (appList == null) {
+                return false;
+            }
+
+            // パース出来たらDBのデータと読み出したデータのpkg要素を比較して重複チェックする
+            DBMainStore mainStore = new DBMainStore(this, true);
+            // mainStore.mCountにDBの件数を格納するために実行する
+            mainStore.fetchAllAppData(null);
+
+            AppElement dbAppElement = new AppElement();
+            if (mainStore.getCount() > 0) {
+                for (AppElement appElement : appList) {
+                    dbAppElement = mainStore.fetchAppDataByColumnAndValue(
+                            DBMainStore.COLUMN_APP_PACKAGE, appElement.getPkgName());
+                    if (dbAppElement != null) {
+                        // すでにDBに同じPackage名のアプリがある場合は飛ばす
+                        Log.d(LOG_TAG, "Overlapped data detect, skip");
+                        continue;
+                    } else {
+                        // Log.d(LOG_TAG, "Added to database: " +
+                        // appElement.toString());
+                        // 重複してなかったら追加する
+                        mainStore.add(appElement.getAppName(), appElement.getPkgName(),
+                                appElement.getMarketUrl(), appElement.getLabel());
+                    }
+                }
+            } else {
+                for (AppElement appElement : appList) {
+                    // Log.d(LOG_TAG, "Added all apps to database: " +
+                    // appElement.toString());
+                    // DBにデータが何も無いのでそのまま追加する
+                    mainStore.add(appElement.getAppName(), appElement.getPkgName(),
+                            appElement.getMarketUrl(), appElement.getLabel());
+                }
+            }
+            return true;
+        } else {
+            // SDカードにファイルがなかった、SDカードがマウントされてなかった、とか。。
+            return false;
+        }
+    }
+
+    /**
+     * エクスポート処理を実行するためのスレッド。
+     */
+    private Runnable exportRunnable = new Runnable() {
+        @Override
+        public void run() {
+            // 実際に別スレッドでやりたい処理はここで
+            // 3.UIのテキストを変更 UIを書き換える場合はHandlerに処理を渡す
+            boolean result = exportXml();
+            Message msg = Message.obtain(handler, MESSAGE_EXPORT);
+            msg.obj = result;
+            handler.sendMessage(msg);
+
+            // 4.実際に行いたい処理が終わったらダイアログを消去
+            mProg.dismiss();
+        };
+    };
+
+    /**
+     * アプリ一覧をXML形式にして、XMLに書き出す。<br>
+     * 処理中はプログレスバーを表示させる。
+     * 
+     * @return SDカードへの書き出しに成功した場合はtrue、そうでなければfalse
+     */
+    private boolean exportXml() {
+        Log.i(LOG_TAG, "Export XML");
+        // アプリ一覧をXMLフォーマットに整形する
+        String xml = buildXmlString(mAppList);
+        if (xml.length() != 0) {
+            // SDカードに書き出して、その結果をreturnする
+            return SdUtils.writeToSdCard(xml);
+        }
+        return false;
+    }
+
+    /**
+     * 別スレッドで実行したインポート/エクスポートのHandler。
+     */
+    private final Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.obj instanceof Boolean) {
+                // Messageのwhatでインポート/エクスポートを判別する
+                Boolean result = (Boolean) msg.obj;
+                switch (msg.what) {
+                    // インポート
+                    case MESSAGE_IMPORT:
+                        if (result) {
+                            Log.d(LOG_TAG, "Import XML done!");
+                            Toast.makeText(mContext, R.string.toast_import_xml_success,
+                                    Toast.LENGTH_LONG).show();
+                            buildListView();
+                        } else {
+                            Log.e(LOG_TAG, "Failed to read XML from SDcard!!");
+                            finish();
+                            Toast.makeText(mContext, R.string.toast_import_xml_fail,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        break;
+
+                    // エクスポート
+                    case MESSAGE_EXPORT:
+                        if (result) {
+                            Log.d(LOG_TAG, "Export XML done!");
+                            Toast.makeText(mContext, R.string.toast_export_xml_success,
+                                    Toast.LENGTH_LONG).show();
+                        } else {
+                            Log.e(LOG_TAG, "Failed to write XML to SDcard!!");
+                            // finish();
+                            Toast.makeText(mContext, R.string.toast_export_xml_fail,
+                                    Toast.LENGTH_LONG).show();
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        }
+    };
 
     /**
      * 並び替えを実行する。<br>
@@ -506,7 +817,7 @@ public class MarketFavoritterActivity extends Activity {
          * @return 作成されたカスタムListView
          */
         @Override
-        public View getView(int position, View convertView, ViewGroup parent) {
+        public View getView(final int position, View convertView, ViewGroup parent) {
             // Viewが使いまわされていない場合、nullが格納されている
             if (convertView == null) {
                 // 1行分layoutからViewの塊を生成
@@ -550,7 +861,7 @@ public class MarketFavoritterActivity extends Activity {
             });
 
             // CheckBoxを実装
-            CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.inflaterCheckBox);
+            final CheckBox checkBox = (CheckBox) convertView.findViewById(R.id.inflaterCheckBox);
             final int pos = position;
             // setChecked()をやる前にリスナ登録しないと、
             // 使いまわしてる他のViewのチェックも道連れにチェックされるｗ
@@ -572,6 +883,6 @@ public class MarketFavoritterActivity extends Activity {
             // }
             // });
             return convertView;
-        } /* getView() */
-    } /* AppElementAdapter */
+        }
+    }
 }
