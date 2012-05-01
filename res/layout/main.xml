@@ -6,6 +6,9 @@
     android:orientation="vertical">
     <ListView
         android:id="@+id/mainAppListView"
+        android:divider="#333333"
+        android:dividerHeight="1sp"
+        android:fastScrollEnabled="true"
         android:layout_height="fill_parent"
         android:layout_width="fill_parent">
     </ListView>

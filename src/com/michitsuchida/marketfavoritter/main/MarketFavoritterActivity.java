@@ -234,8 +234,8 @@ public class MarketFavoritterActivity extends Activity {
                 int appCount = 0;
                 // List<String> labelList = new ArrayList<String>();
                 for (int i = 0; i < labelArray.length; i++) {
-                    // 配列の最初には「フィルタをクリア」が入ってるのでそれは件数を数えない
-                    if (i == 0) {
+                    // 配列の1,2番目は「フィルタをクリア」と「ラベル未設定」が入ってるのでそれは件数を数えない
+                    if (i <= 1) {
                         // labelList.add(labelArray[i]);
                         labelArrayWithCount[i] = labelArray[i];
                     } else {
@@ -244,8 +244,6 @@ public class MarketFavoritterActivity extends Activity {
                         labelArrayWithCount[i] = labelArray[i] + "(" + appCount + ")";
                     }
                 }
-                // String[] labelArrayWithCount = labelList.toArray(new
-                // String[labelList.size()]);
 
                 AlertDialog.Builder dialogFilter = new AlertDialog.Builder(this);
                 dialogFilter.setTitle(R.string.filter_title);
@@ -256,6 +254,9 @@ public class MarketFavoritterActivity extends Activity {
                             // 「フィルタをクリア」だから、SharedPreferenceの値をリセットする
                             putFilter("");
                             buildListView();
+                        } else if (labelIndex == 1) {
+                            // 「ラベル未設定」なので、空文字でフィルタする
+                            filter("");
                         } else {
                             // 「フィルタをクリア」以外だったらフィルタリングする
                             filter(labelArray[labelIndex]);
@@ -395,8 +396,6 @@ public class MarketFavoritterActivity extends Activity {
      * @return ラベル一覧の配列
      */
     private String[] buildLabelList() {
-        // 「フィルタをクリア」
-        String clearLabel = getString(R.string.filter_clear_label);
 
         // すべてのデータのラベル部分を取得する
         List<AppElement> apps = mMainStore.fetchAllAppData(null);
@@ -427,8 +426,9 @@ public class MarketFavoritterActivity extends Activity {
         // 完成したラベルリストを並び替える
         Collections.sort(duplicatedLabelList);
 
-        // リストの最初に「フィルタをクリア」を格納し、リストを配列に変換
-        duplicatedLabelList.add(0, clearLabel);
+        // リストの最初に「フィルタをクリア」を格納、2番目には「ラベル未設定」を格納し、配列に変換
+        duplicatedLabelList.add(0, getString(R.string.filter_clear_label));
+        duplicatedLabelList.add(1, getString(R.string.filter_label_na));
         Log.d(LOG_TAG, duplicatedLabelList.toString());
 
         return duplicatedLabelList.toArray(new String[duplicatedLabelList.size()]);

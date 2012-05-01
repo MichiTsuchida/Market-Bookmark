@@ -197,14 +197,24 @@ public class DBMainStore {
         List<AppElement> data = new ArrayList<AppElement>();
         String where = DBMainStore.COLUMN_APP_LABEL + " like ?";
         String param = "%" + filter + "%";
+
         Cursor c = null;
         try {
-            c = mDb.query(TBL_NAME, new String[] {
-                    COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
-                    COLUMN_APP_LABEL
-            }, where, new String[] {
-                param
-            }, null, null, order);
+            // ラベル未設定の場合
+            if (filter.equals("")) {
+                where = DBMainStore.COLUMN_APP_LABEL + "=\"" + filter + "\"";
+                c = mDb.query(TBL_NAME, new String[] {
+                        COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                        COLUMN_APP_LABEL
+                }, where, null, null, null, order);
+            } else {
+                c = mDb.query(TBL_NAME, new String[] {
+                        COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
+                        COLUMN_APP_LABEL
+                }, where, new String[] {
+                    param
+                }, null, null, order);
+            }
             c.moveToFirst();
             mCount = c.getCount();
             for (int i = 0; i < mCount; i++) {

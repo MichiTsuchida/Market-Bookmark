@@ -170,42 +170,60 @@ public class ReceiveMarketIntentActivity extends Activity {
                                 final boolean[] labelFlags = new boolean[labelArray.length];
 
                                 AlertDialog.Builder dialog = new AlertDialog.Builder(context);
-                                dialog.setTitle(R.string.dialog_suggest_label_title);
 
-                                // チェックボックスのダイアログ
-                                dialog.setMultiChoiceItems(labelArray, labelFlags,
-                                        new OnMultiChoiceClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which,
-                                                    boolean isChecked) {
-                                                labelFlags[which] = isChecked;
-                                            }
-                                        });
-                                // OKボタン
-                                dialog.setPositiveButton(R.string.button_ok,
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                StringBuffer buff = new StringBuffer();
-                                                // チェックが付けられたラベルをカンマで結合
-                                                for (int i = 0; i < labelArray.length; i++) {
-                                                    if (labelFlags[i]) {
-                                                        buff.append(labelArray[i]);
-                                                        buff.append(",");
-                                                    }
+                                // ラベルリストが空だった場合
+                                if (labelArray.length == 0) {
+                                    dialog.setMessage(R.string.dialog_suggest_label_empty_text);
+                                    dialog.setPositiveButton(R.string.button_ok,
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog,
+                                                        int which) {
+                                                    // 何もしない
                                                 }
-                                                // ラベルのテキストボックスに反映
-                                                mEtLabel.setText(buff);
-                                            }
-                                        });
-                                // キャンセルボタン
-                                dialog.setNegativeButton(R.string.button_cancel,
-                                        new DialogInterface.OnClickListener() {
-                                            @Override
-                                            public void onClick(DialogInterface dialog, int which) {
-                                                // 何もしない
-                                            }
-                                        });
+                                            });
+                                } else {
+                                    dialog.setTitle(R.string.dialog_suggest_label_title);
+
+                                    // チェックボックスのダイアログ
+                                    dialog.setMultiChoiceItems(labelArray, labelFlags,
+                                            new OnMultiChoiceClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog,
+                                                        int which, boolean isChecked) {
+                                                    labelFlags[which] = isChecked;
+                                                }
+                                            });
+                                    // OKボタン
+                                    dialog.setPositiveButton(R.string.button_ok,
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog,
+                                                        int which) {
+                                                    StringBuffer buff = new StringBuffer();
+                                                    // チェックが付けられたラベルをカンマで結合
+                                                    for (int i = 0; i < labelArray.length; i++) {
+                                                        if (labelFlags[i]) {
+                                                            buff.append(labelArray[i]);
+                                                            buff.append(",");
+                                                        }
+                                                    }
+                                                    // ラベルのテキストボックスに反映
+                                                    mEtLabel.setText(buff);
+                                                }
+                                            });
+                                    // キャンセルボタン
+                                    dialog.setNegativeButton(R.string.button_cancel,
+                                            new DialogInterface.OnClickListener() {
+                                                @Override
+                                                public void onClick(DialogInterface dialog,
+                                                        int which) {
+                                                    // 何もしない
+                                                }
+                                            });
+                                }
+
+                                // ダイアログを表示
                                 dialog.show();
                             }
                         });

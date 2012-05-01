@@ -21,9 +21,11 @@
     <string name="dialog_share_title">Shere: </string>
     <string name="dialog_share_from_market_title">Can\'t handle</string>
     <string name="dialog_share_from_market_text">Please share the application from Android Market!</string>
+    <string name="dialog_suggest_label_empty_text">There are no label on database.</string>
     <string name="dialog_suggest_label_title">Suggest labels from history</string>
     <string name="dialog_suggest_label_text"></string>
     <string name="filter_clear_label">Clear filter</string>
+    <string name="filter_label_na">Not label-ed</string>
     <string name="filter_title">Select label</string>
     <string name="menu_edit_item">Edit item</string>
     <string name="menu_filter_item">Filter by label</string>

@@ -18,9 +18,11 @@
     <string name="dialog_share_title">共有する: </string>
     <string name="dialog_share_from_market_title">これは処理できません</string>
     <string name="dialog_share_from_market_text">Androidマーケットからアプリケーションを共有してください。</string>
+    <string name="dialog_suggest_label_empty_text">ラベルの入力履歴がありません。</string>
     <string name="dialog_suggest_label_title">履歴からラベルを入力</string>
     <string name="dialog_suggest_label_text"></string>
     <string name="filter_clear_label">フィルタをクリア</string>
+    <string name="filter_label_na">ラベル未設定</string>
     <string name="filter_title">ラベルを選択</string>
     <string name="menu_edit_item">アイテムを編集</string>
     <string name="menu_filter_item">ラベルで絞込み</string>
