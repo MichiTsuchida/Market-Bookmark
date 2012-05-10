@@ -53,6 +53,9 @@ public class MarketFavoritterActivity extends Activity {
 
     private static final String SHARED_PREF_KEY_FILTER = "Filter";
 
+    /** フィルタリングがクリアされている場合にSharePrefに入る値 */
+    public static final String FILTER_CLEARED = "clear";
+
     /** インポート処理のMessageのwhat */
     private static final int MESSAGE_IMPORT = 0;
 
@@ -251,8 +254,8 @@ public class MarketFavoritterActivity extends Activity {
                     @Override
                     public void onClick(DialogInterface dialog, int labelIndex) {
                         if (labelIndex == 0) {
-                            // 「フィルタをクリア」だから、SharedPreferenceの値をリセットする
-                            putFilter("");
+                            // 「フィルタをクリア」の時は"clear"をSharedPreferenceにセットする
+                            putFilter(FILTER_CLEARED);
                             buildListView();
                         } else if (labelIndex == 1) {
                             // 「ラベル未設定」なので、空文字でフィルタする
@@ -710,6 +713,8 @@ public class MarketFavoritterActivity extends Activity {
     private void sort(String orderColumn, String sortOrder) {
         String order = orderColumn + " " + sortOrder;
         Log.d(LOG_TAG, "Sort order: " + order);
+
+        // フィルタリングのラベルが"clear"だったらフィルタリングされてない
         mAppList = mMainStore.fetchFilteredAppData(getFilter(), order);
 
         AppElementAdapter adapter = new AppElementAdapter(this, R.id.inflaterLayout, mAppList);
@@ -743,10 +748,10 @@ public class MarketFavoritterActivity extends Activity {
      * 初回起動時は値が無いので、第2引数の値をdefault値として取得する。<br>
      * また、もし値が取得出来なかった時もこの値が取得される。
      * 
-     * @return 取得したフィルタリングのラベル、値がない場合は""(空文字)
+     * @return 取得したフィルタリングのラベル、値がない場合は"clear"
      */
     private String getFilter() {
-        return this.mSharedPref.getString(SHARED_PREF_KEY_FILTER, "");
+        return this.mSharedPref.getString(SHARED_PREF_KEY_FILTER, FILTER_CLEARED);
     }
 
     /**

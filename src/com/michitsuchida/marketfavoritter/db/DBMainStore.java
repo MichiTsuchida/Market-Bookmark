@@ -1,6 +1,7 @@
 
 package com.michitsuchida.marketfavoritter.db;
 
+import static com.michitsuchida.marketfavoritter.main.MarketFavoritterActivity.FILTER_CLEARED;
 import static com.michitsuchida.marketfavoritter.util.StringUtils.splitWithCommaAndSpace;
 
 import java.util.ArrayList;
@@ -196,18 +197,21 @@ public class DBMainStore {
     public List<AppElement> fetchFilteredAppData(String filter, String order) {
         List<AppElement> data = new ArrayList<AppElement>();
         String where = DBMainStore.COLUMN_APP_LABEL + " like ?";
-        String param = "%" + filter + "%";
 
         Cursor c = null;
         try {
-            // ラベル未設定の場合
             if (filter.equals("")) {
+                // 「ラベル未設定」の場合
                 where = DBMainStore.COLUMN_APP_LABEL + "=\"" + filter + "\"";
                 c = mDb.query(TBL_NAME, new String[] {
                         COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
                         COLUMN_APP_LABEL
                 }, where, null, null, null, order);
             } else {
+                if (filter.equals(FILTER_CLEARED)) {
+                    filter = "";
+                }
+                String param = "%" + filter + "%";
                 c = mDb.query(TBL_NAME, new String[] {
                         COLUMN_ID, COLUMN_APP_NAME, COLUMN_APP_PACKAGE, COLUMN_APP_URL,
                         COLUMN_APP_LABEL
