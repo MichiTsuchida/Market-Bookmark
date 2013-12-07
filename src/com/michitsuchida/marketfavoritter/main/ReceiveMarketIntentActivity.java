@@ -1,28 +1,19 @@
 
 package com.michitsuchida.marketfavoritter.main;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
-
-import javax.net.ssl.HttpsURLConnection;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.text.ClipboardManager;
 import android.util.Log;
 import android.view.View;
@@ -50,14 +41,17 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** <title>タグの内容をぶっこ抜く正規表現パターン */
     public static final String PATTERN_FOR_TITLE_TAG = ".*<title>(.+)\\s-\\s.+</title>.*";
 
+    /** Intent.EXTRA_SUBJECTからアプリ名をぶっこ抜く正規表現パターン(日本語) */
+    public static final String PATTERN_APP_NAME_FROM_SUBJECT_JA = "「(.+)」";
+
+    /** Intent.EXTRA_SUBJECTからアプリ名をぶっこ抜く正規表現パターン(日本語) */
+    public static final String PATTERN_APP_NAME_FROM_SUBJECT_EN = "\"(.+)\"";
+
     /** マーケットアプリからのIntent URL */
     public static final String MARKET_URL = "market.android.com/details";
 
     /** Google playストアからのIntent URL */
     public static final String GOOGLE_PLAY_URL = "play.google.com/store/apps";
-
-    /** <title>タグの内容を格納する */
-    private String mTitle = "";
 
     /** 取得されたアプリ名 */
     private String mAppName = "";
@@ -77,9 +71,6 @@ public class ReceiveMarketIntentActivity extends Activity {
     /** ラベルのEditText */
     private EditText mEtLabel;
 
-    /** 処理中にくるくるさせるダイアログ */
-    private ProgressDialog mProg;
-
     /**
      * onCreate.
      * 
@@ -91,11 +82,6 @@ public class ReceiveMarketIntentActivity extends Activity {
         setContentView(R.layout.market_link_intent);
         final Context context = this;
 
-        // String packageName = getCallingActivity().getPackageName();
-        // String className = getCallingActivity().getClassName();
-        // Log.d(LOG_TAG, "Caller package: " + packageName);
-        // Log.i(LOG_TAG, "Caller class: " + className);
-
         Intent marketIntent = getIntent();
         String action = marketIntent.getAction();
 
@@ -106,7 +92,7 @@ public class ReceiveMarketIntentActivity extends Activity {
             if (extras != null) {
                 // アプリのURLを取得する
                 mUrl = extras.getCharSequence(Intent.EXTRA_TEXT).toString();
-                Log.d(LOG_TAG, mUrl);
+                Log.d(LOG_TAG, "Intent.EXTRA_TEXT: " + mUrl);
 
                 // 呼び出し元がマーケットかどうか判定
                 if (mUrl.contains(MARKET_URL) || mUrl.contains(GOOGLE_PLAY_URL)) {
@@ -118,6 +104,9 @@ public class ReceiveMarketIntentActivity extends Activity {
                     AppElement elem = mainStore.fetchAppDataByColumnAndValue(
                             DBMainStore.COLUMN_APP_PACKAGE, mPkg);
                     if (elem != null) {
+
+                        // DBに既にアプリ名が登録されてる場合
+
                         Log.d(LOG_TAG, "Already exist on database. App name: " + mAppName);
                         // なぜかToast表示されないので、重複してるよダイアログ
                         AlertDialog.Builder dialog = new AlertDialog.Builder(this);
@@ -134,11 +123,33 @@ public class ReceiveMarketIntentActivity extends Activity {
                                     }
                                 }).show();
                     } else {
-                        // 1.プログレスバーをくるくる
-                        mProg = new ProgressDialog(this);
-                        mProg.setTitle(R.string.progress_app_name_title);
-                        mProg.setMessage(getString(R.string.progress_app_name_body));
-                        mProg.show();
+
+                        // DBにアプリ名が登録されてない場合
+
+                        // IntentのSubjectにアプリ名が含まれているのでそれを引っ張ってくる
+                        String extraSubject = extras.getCharSequence(Intent.EXTRA_SUBJECT)
+                                .toString();
+                        // Log.d(LOG_TAG, "Intent.EXTRA_SUBJECT: " +
+                        // extraSubject);
+
+                        // 日本語の場合
+                        Pattern pattern = Pattern.compile(PATTERN_APP_NAME_FROM_SUBJECT_JA);
+                        Matcher matcher = pattern.matcher(extraSubject);
+                        if (matcher.find()) {
+                            mAppName = matcher.group(1);
+                            Log.d(LOG_TAG, "App name: " + mAppName);
+                        } else {
+                            // 英語の場合
+                            pattern = Pattern.compile(PATTERN_APP_NAME_FROM_SUBJECT_EN);
+                            matcher = pattern.matcher(extraSubject);
+                            if (matcher.find()) {
+                                mAppName = matcher.group(1);
+                                Log.d(LOG_TAG, "App name: " + mAppName);
+                            } else {
+                                Log.e(LOG_TAG, "Could not find App name!");
+                            }
+
+                        }
 
                         // Viewに情報をセットする
                         mEtAppName = (EditText) findViewById(R.id.marketLinkEditTextAppName);
@@ -228,6 +239,7 @@ public class ReceiveMarketIntentActivity extends Activity {
                             }
                         });
 
+                        // DBに追加するボタン
                         Button addButton = (Button) findViewById(R.id.marketLinkAddButton);
                         addButton.setOnClickListener(new OnClickListener() {
                             @Override
@@ -246,9 +258,6 @@ public class ReceiveMarketIntentActivity extends Activity {
                                 Log.d(LOG_TAG, "Add to Market Bookmark. App name: " + mAppName);
                             }
                         });
-
-                        // 2.別スレッドを生成して、アプリ名を取得する
-                        (new Thread(runnable)).start();
                     } /* if (elem != null) */
                 } else {
                     // マーケットから呼びだしてねダイアログ
@@ -265,122 +274,6 @@ public class ReceiveMarketIntentActivity extends Activity {
                                     finish();
                                 }
                             }).show();
-                }
-            }
-        }
-    }
-
-    /**
-     * メインとは別のアプリ名を取得するためのスレッド。
-     */
-    private Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-            // 実際に別スレッドでやりたい処理はここで
-            doRequest(mPkg);
-
-            // このRunnableから直接UIを書き換えようとすると、
-            // CalledFromWrongThreadException: Only the original thread that
-            // created a view hierarchy can touch its views.
-            // で落ちる(このRunnableはUIスレッドとは別スレッドで立ち上がっているため)
-
-            // 3.UIのテキストを変更 UIを書き換える場合はHandlerに処理を渡す
-            // 実際に行う処理の結果（ループカウンタ等）を動的にUI側へ渡したい場合
-            // Handler#sendMessage()にBundleをセットして渡す
-
-            Message message = new Message();
-            Bundle bundle = new Bundle();
-            bundle.putString(EXTRA_APP_NAME, mAppName);
-            message.setData(bundle);
-            handler.sendMessage(message);
-
-            // 4.実際に行いたい処理が終わったらダイアログを消去
-            mProg.dismiss();
-        }
-    };
-
-    /**
-     * 別スレッドで取得したアプリ名を変更するHandler。
-     */
-    private final Handler handler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            // sendMessage()で渡されたBundleを取得してUIに表示
-            String text = msg.getData().get(EXTRA_APP_NAME).toString();
-            ((TextView) findViewById(R.id.marketLinkEditTextAppName)).setText(text);
-        }
-    };
-
-    /**
-     * HTTPリクエストを実行する。<br>
-     * HTTPコネクションに失敗した時のために、3回リトライする。<br>
-     * それでもダメなら諦めるｗｗ<br>
-     * 取得したアプリ名は、Handlerを使ってメインのスレッドに渡す。
-     * 
-     * @param pkg アプリケーションのpackage名
-     */
-    private void doRequest(String pkg) {
-        final String urlStr = "https://market.android.com/details?id=" + pkg;
-        Log.d(LOG_TAG, "URL for app is: " + urlStr);
-
-        // 3回リトライする
-        for (int i = 0; i < 2; i++) {
-            // HttpでGETするよ!!
-            InputStream in = null;
-            HttpsURLConnection https = null;
-            try {
-                // URLにHTTP接続
-                URL url = new URL(urlStr);
-                https = (HttpsURLConnection) url.openConnection();
-                https.setRequestMethod("GET");
-                https.connect();
-                // データを取得
-                in = https.getInputStream();
-
-                // HTMLソースを読み出す
-                String src = new String();
-                byte[] line = new byte[1024];
-                int size;
-                while (true) {
-                    size = in.read(line);
-                    if (size <= 0) {
-                        break;
-                    }
-                    src += new String(line);
-
-                    // HTMLのソースから<title>タグだけをぶっこ抜く正規表現
-                    Pattern pattern = Pattern.compile(PATTERN_FOR_TITLE_TAG);
-                    // String#toLowerCase()で一括小文字にして比較
-                    // Matcher matcher = pattern.matcher(src.toLowerCase());
-                    Matcher matcher = pattern.matcher(src);
-                    if (matcher.find()) {
-                        mTitle = matcher.group(1);
-                        Log.d(LOG_TAG, "App found: " + mTitle);
-                        mAppName = mTitle;
-                        break;
-                    }
-                }
-                if (!mAppName.equals("")) {
-                    Log.d(LOG_TAG, "App name: " + mAppName);
-                    break;
-                }
-            } catch (PatternSyntaxException e) {
-                // 例外発生時はスタックトレースを出力
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                // close処理はfinally内でtry-catchする
-                try {
-                    if (https != null) {
-                        https.disconnect();
-                    }
-                    if (in != null) {
-                        in.close();
-                    }
-                } catch (Exception e) {
-                    // FroyoだけHttpsURLConnectionにバグがあってNullPtrExが出ちゃう。。
-                    e.printStackTrace();
                 }
             }
         }

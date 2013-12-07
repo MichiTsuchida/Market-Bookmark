@@ -137,8 +137,12 @@ public class MarketFavoritterEditActivity extends Activity {
                                             buff.append(",");
                                         }
                                     }
-                                    // ラベルのテキストボックスに反映
-                                    mEtLabel.setText(buff);
+
+                                    // 何も選択せずにOKを押した場合は何もしない
+                                    if (buff.length() != 0) {
+                                        // ラベルのテキストボックスに反映
+                                        mEtLabel.setText(buff);
+                                    }
                                 }
                             });
                     // キャンセルボタン

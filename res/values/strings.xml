@@ -7,7 +7,7 @@
     <string name="button_edit_bookmark">Edit bookmark</string>
     <string name="button_export">Export</string>
     <string name="button_import">Import</string>
-    <string name="button_market">Market</string>
+    <string name="button_market">Google\nPlay</string>
     <string name="button_ok">OK</string>
     <string name="button_suggest_label">Suggest\nLabel</string>
     <string name="dialog_add_item_title">Add to bookmark</string>

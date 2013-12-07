@@ -152,7 +152,6 @@ public class MarketFavoritterActivity extends Activity {
         Log.d(LOG_TAG, "onPause()");
         mMainStore.close();
         mMainStore = null;
-        putFilter("");
     }
 
     /**
